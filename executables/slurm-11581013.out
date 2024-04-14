@@ -1,0 +1,35 @@
+/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/accelerate/accelerator.py:436: FutureWarning: Passing the following arguments to `Accelerator` is deprecated and will be removed in version 1.0 of Accelerate: dict_keys(['dispatch_batches', 'split_batches', 'even_batches', 'use_seedable_sampler']). Please pass an `accelerate.DataLoaderConfiguration` instead: 
+dataloader_config = DataLoaderConfiguration(dispatch_batches=None, split_batches=False, even_batches=True, use_seedable_sampler=True)
+  warnings.warn(
+Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+loading models and tokenizers!
+set training args
+trainer!
+trainer starts training
+  0%|          | 0/49509 [00:00<?, ?it/s]Traceback (most recent call last):
+  File "/home/cs601-zxia15/NLP_final_project/executables/../src/gpt2_finetune.py", line 104, in <module>
+    fine_tune_model()
+  File "/home/cs601-zxia15/NLP_final_project/executables/../src/gpt2_finetune.py", line 97, in fine_tune_model
+    trainer.train()
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/transformers/trainer.py", line 1780, in train
+    return inner_training_loop(
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/transformers/trainer.py", line 2118, in _inner_training_loop
+    tr_loss_step = self.training_step(model, inputs)
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/transformers/trainer.py", line 3036, in training_step
+    loss = self.compute_loss(model, inputs)
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/transformers/trainer.py", line 3059, in compute_loss
+    outputs = model(**inputs)
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/cs601-zxia15/NLP_final_project/src/GPT2ForwardBackward/modeling_opengpt2.py", line 1010, in forward
+    transformer_outputs = self.transformer(
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1511, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1520, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/cs601-zxia15/NLP_final_project/src/GPT2ForwardBackward/modeling_opengpt2.py", line 820, in forward
+    all_self_attentions = () if output_attentions else None
+RuntimeError: Boolean value of Tensor with more than one value is ambiguous
+  0%|          | 0/49509 [00:01<?, ?it/s]

@@ -1,0 +1,32 @@
+/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/accelerate/accelerator.py:436: FutureWarning: Passing the following arguments to `Accelerator` is deprecated and will be removed in version 1.0 of Accelerate: dict_keys(['dispatch_batches', 'split_batches', 'even_batches', 'use_seedable_sampler']). Please pass an `accelerate.DataLoaderConfiguration` instead: 
+dataloader_config = DataLoaderConfiguration(dispatch_batches=None, split_batches=False, even_batches=True, use_seedable_sampler=True)
+  warnings.warn(
+Detected kernel version 4.18.0, which is below the recommended minimum of 5.5.0; this can cause the process to hang. It is recommended to upgrade the kernel to the minimum version or higher.
+loading models and tokenizers!
+set training args
+trainer!
+trainer starts training
+  0%|          | 0/49509 [00:00<?, ?it/s]index queried 13658
+Traceback (most recent call last):
+  File "/home/cs601-zxia15/NLP_final_project/executables/../src/gpt2_finetune.py", line 107, in <module>
+    fine_tune_model()
+  File "/home/cs601-zxia15/NLP_final_project/executables/../src/gpt2_finetune.py", line 100, in fine_tune_model
+    trainer.train()
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/transformers/trainer.py", line 1780, in train
+    return inner_training_loop(
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/transformers/trainer.py", line 2085, in _inner_training_loop
+    for step, inputs in enumerate(epoch_iterator):
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 631, in __next__
+    data = self._next_data()
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 675, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 51, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/cs601-zxia15/.conda/envs/myenv/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 51, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/cs601-zxia15/NLP_final_project/executables/../src/gpt2_finetune.py", line 22, in __getitem__
+    datas = [{"input": self.tokenizer(data["instances"][0]["instruction_with_input"], 
+  File "/home/cs601-zxia15/NLP_final_project/executables/../src/gpt2_finetune.py", line 22, in <listcomp>
+    datas = [{"input": self.tokenizer(data["instances"][0]["instruction_with_input"], 
+TypeError: string indices must be integers
+  0%|          | 0/49509 [00:00<?, ?it/s]
