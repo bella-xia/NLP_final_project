@@ -96,6 +96,8 @@ GPT2_PRETRAINED_MODEL_ARCHIVE_LIST = [
     # See all GPT-2 models at https://huggingface.co/models?filter=gpt2
 ]
 
+GPT2_CHOICE_OF_MODEL = GPT2_PRETRAINED_MODEL_ARCHIVE_LIST[0]
+
 
 def load_tf_weights_in_gpt2(model, config, gpt2_checkpoint_path):
     """Load tf checkpoints in a pytorch model"""
@@ -206,7 +208,6 @@ class Attention(nn.Module):
         self.pruned_heads = self.pruned_heads.union(heads)
 
     def _attn(self, q, k, v, attention_mask=None, head_mask=None, output_attentions=False):
-        print("output attentions: ", output_attentions)
         w = torch.matmul(q, k)
         if self.scale:
             w = w / (float(v.size(-1)) ** 0.5)
@@ -711,7 +712,7 @@ class OpenGPT2Model(OpenGPT2PreTrainedModel):
     @add_start_docstrings_to_model_forward(OpenGPT2_INPUTS_DOCSTRING)
     @add_code_sample_docstrings(
         # tokenizer_class=_TOKENIZER_FOR_DOC,
-        checkpoint="gpt2",
+        checkpoint = GPT2_CHOICE_OF_MODEL,
         output_type=BaseModelOutputWithPastAndCrossAttentions,
         config_class=_CONFIG_FOR_DOC,
     )
@@ -731,7 +732,6 @@ class OpenGPT2Model(OpenGPT2PreTrainedModel):
         output_hidden_states=None,
         return_dict=None,
     ):
-        print("output attentions in forward", output_attentions)
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
             output_hidden_states if output_hidden_states is not None else self.config.output_hidden_states
@@ -757,9 +757,11 @@ class OpenGPT2Model(OpenGPT2PreTrainedModel):
             position_ids = position_ids.view(-1, input_shape[-1])
 
         if past_key_values is None:
+            print("past key values is None")
             past_length = 0
             past_key_values = [None] * len(self.h)
         else:
+            print(past_key_values)
             past_length = past_key_values[0][0].size(-2)
         if position_ids is None:
             device = input_ids.device if input_ids is not None else inputs_embeds.device
@@ -980,7 +982,7 @@ class OpenGPT2LMHeadModel(OpenGPT2PreTrainedModel):
     @add_start_docstrings_to_model_forward(OpenGPT2_INPUTS_DOCSTRING)
     @add_code_sample_docstrings(
         # tokenizer_class=_TOKENIZER_FOR_DOC,
-        checkpoint="gpt2",
+        checkpoint = GPT2_CHOICE_OF_MODEL,
         output_type=CausalLMOutputWithCrossAttentions,
         config_class=_CONFIG_FOR_DOC,
     )

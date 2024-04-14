@@ -28,7 +28,7 @@ class OpenGPT2Dataset(Dataset):
         return {"input_ids": data["input"]["input_ids"].to(self.device),
                 "attention_mask": data["input"]["attention_mask"].to(self.device),
                 "labels": data["output"]["input_ids"].to(self.device),
-                "output_attentions": data["output"]["attention_mask"].to(self.device)}
+               }
 
 class OpenGPT2Trainer(Trainer):
     def __init__(self, *args, device=torch.device("cpu"), is_core=True, **kwargs):
@@ -61,8 +61,8 @@ def read_jsonl(file_path):
 
 def load_datasets(tokenizer, batch_size, device=torch.device("cpu"), is_core=True):
     
-    PATH_TO_CORE_DATASET = "/home/cs601-zxia15/NLP_final_project/unnatural-instructions/data/core_data.jsonl" 
-    PATH_TO_FULL_DATASET = "/home/cs601-zxia15/NLP_final_project/unnatural-instructions/data/full_data.jsonl" 
+    PATH_TO_CORE_DATASET = "/home/cs601-zxia15/NLP_final_project/data/unnatural-instructions/core_data.jsonl" 
+    PATH_TO_FULL_DATASET = "/home/cs601-zxia15/NLP_final_project/data/unnatural-instructions/full_data.jsonl" 
 
     data_path = PATH_TO_CORE_DATASET if is_core else PATH_TO_FULL_DATASET
     dataset = OpenGPT2Dataset(read_jsonl(data_path), tokenizer, device)
@@ -81,7 +81,7 @@ def fine_tune_model():
     # Define training arguments
     print("set training args")
     training_args = TrainingArguments(
-    per_device_train_batch_size=4,
+    per_device_train_batch_size=1,
     num_train_epochs=3,
     logging_dir='./logs',
     output_dir = "/home/cs601-zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_forward"
