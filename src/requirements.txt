@@ -5,3 +5,5 @@ openai==1.12.0
 torch==2.2.1
 transformers==4.39.3
 scikit-learn
+transformers[torch]
+accelerate
