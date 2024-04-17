@@ -1,6 +1,20 @@
-import torch
+import torch, subprocess
 from GPT2ForwardBackward.modeling_opengpt2 import OpenGPT2LMHeadModel
 from GPT2ForwardBackward.padded_encoder import Encoder
+
+def print_gpu_memory():
+    """
+    Print the amount of GPU memory used by the current process
+    This is useful for debugging memory issues on the GPU
+    """
+    # check if gpu is available
+    if torch.cuda.is_available():
+        print("torch.cuda.memory_allocated: %fGB" % (torch.cuda.memory_allocated(0) / 1024 / 1024 / 1024))
+        print("torch.cuda.memory_reserved: %fGB" % (torch.cuda.memory_reserved(0) / 1024 / 1024 / 1024))
+        print("torch.cuda.max_memory_reserved: %fGB" % (torch.cuda.max_memory_reserved(0) / 1024 / 1024 / 1024))
+
+        p = subprocess.check_output('nvidia-smi')
+        print(p.decode("utf-8"))
 
 def get_forward_backward_preds(model, encoder, input_text, is_forward, device):
     input_tokens = encoder.encode(input_text) if is_forward else encoder.encode(input_text)[::-1]
@@ -26,4 +40,5 @@ if __name__ == "__main__":
     # get_forward_backward_preds(model_forward, encoder, QUERY, True, device_forward)
     # print("backward")
     get_forward_backward_preds(model_backward, encoder, RESPONSE, False, device_backward)
+    print_gpu_memory()
     

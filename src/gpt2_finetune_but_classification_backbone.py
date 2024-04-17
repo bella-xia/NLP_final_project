@@ -14,11 +14,11 @@ class CustomModelforSequenceGeneration(torch.nn.Module):
         super(CustomModelforSequenceGeneration, self).__init__()
         self.model, self.encoder = load_models(device=self.device)
 
-    def forward(self, input_ids, attention_mask):
+    def forward(self, input_ids, attention_mask, labels):
         
-        output = self.model(input_ids=input_ids, attention_mask=attention_mask)
+        output = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
 
-        return {"labels": output}
+        return output
     
 def print_gpu_memory():
     """
@@ -107,7 +107,7 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
         num_training_steps=len(train_dataloader) * num_epochs
     )
 
-    loss_fn = torch.nn.CrossEntropyLoss()
+    # loss_fn = torch.nn.CrossEntropyLoss()
     
     epoch_list = []
     train_loss_list = []
@@ -150,6 +150,7 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
 
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
+            labels = batch['labels'].to(device)
 
 
             # forward pass
@@ -160,10 +161,12 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
                 with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
                             profile_memory=True, record_shapes=True) as prof_fore:
                     with record_function("forward"):
-                        predictions = mymodel(input_ids, attention_mask)
+                        predictions = mymodel(input_ids, attention_mask, labels)
                         print(predictions)
                         # predictions =  output['logits']
-                        loss = loss_fn(predictions, batch['labels'].to(device))
+                        # loss = loss_fn(predictions, batch['labels'].to(device))
+                        # pred_logits = predictions['logits']
+                        loss = predictions['loss']
                         cur_epoch_train_loss.append(loss.item())
                 print("forward memory usage:")
                 print(prof_fore.key_averages().table(sort_by="cuda_memory_usage", row_limit=5))
@@ -181,7 +184,9 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
                 predictions = mymodel(input_ids, attention_mask)
                 print(predictions)
 
-                loss = loss_fn(predictions, batch['labels'].to(device))
+                # loss = loss_fn(predictions, batch['labels'].to(device))
+                # pred_logits = predictions['logits']
+                loss = predictions['loss']
                 cur_epoch_train_loss.append(loss.item())
                 loss.backward()
 
