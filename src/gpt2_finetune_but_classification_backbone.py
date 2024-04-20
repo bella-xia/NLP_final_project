@@ -2,23 +2,28 @@ import torch, argparse, subprocess, time
 from torch.profiler import profile, record_function, ProfilerActivity
 from transformers import GPT2Tokenizer, get_scheduler
 from gpt2_finetune import load_datasets, load_models
+from load_model import get_forward_backward_preds
 
 import evaluate as evaluate
+import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 
 class CustomModelforSequenceGeneration(torch.nn.Module):
 
-    def __init__(self, device):
-        self.device = device
+    def __init__(self, model, device):
         super(CustomModelforSequenceGeneration, self).__init__()
-        self.model, self.encoder = load_models(device=self.device)
+        self.device = device
+        self.gpt2_model = model
 
     def forward(self, input_ids, attention_mask, labels):
         
-        output = self.model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+        output = self.gpt2_model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
 
         return output
+    
+    def get_model(self):
+        return self.gpt2_model
     
 def print_gpu_memory():
     """
@@ -35,7 +40,7 @@ def print_gpu_memory():
         print(p.decode("utf-8"))
 
 
-def evaluate_model(model, dataloader, device):
+def evaluate_model(model, encoder, is_backward, device):
     """
     Evaluate a PyTorch Model
     :param torch.nn.Module model: the model to be evaluated
@@ -45,6 +50,11 @@ def evaluate_model(model, dataloader, device):
     """
     # load metrics
     # dev_accuracy = evaluate.load('accuracy')
+    input_text = "not very interesting paper by Peter West."
+    is_forward = ~is_backward
+    get_forward_backward_preds(model, encoder, input_text, is_forward, device)
+    return
+
     raise "Unimplemented"
 
     # turn model into evaluation mode
@@ -75,7 +85,7 @@ def evaluate_model(model, dataloader, device):
     # compute and return metrics
     # return dev_accuracy.compute()
 
-def train(mymodel, num_epochs, train_dataloader, device, lr):
+def train(mymodel, num_epochs, train_dataloader, device, lr, encoder, is_backward):
     """ Train a PyTorch Module
 
     :param torch.nn.Module mymodel: the model to be trained
@@ -112,14 +122,15 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
     epoch_list = []
     train_loss_list = []
 
+    prev_loss = 100000
+
 
     for epoch in range(num_epochs):
 
         epoch_start_time = time.time()
 
-        mymodel.train()
+        cur_epoch_train_loss = []
 
-        cur_epoch_train_loss = torch.tensor([])
 
         print(f"Epoch {epoch + 1} training:")
 
@@ -148,56 +159,32 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
             # get the input_ids, attention_mask, and labels from the batch and put them on the device
             # Hints: similar to the evaluate_model function
 
+            mymodel.train()
+
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
             labels = batch['labels'].to(device)
 
 
-            # forward pass
-            # name the output as `output`
-            # Hints: refer to the evaluate_model function on how to get the predictions (logits)
-            # - It's slightly different from the implementation in train of base_classification.py
-            if (epoch == 0) and (index == 0):
-                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-                            profile_memory=True, record_shapes=True) as prof_fore:
-                    with record_function("forward"):
-                        predictions = mymodel(input_ids, attention_mask, labels)
-                        print(predictions)
-                        # predictions =  output['logits']
-                        # loss = loss_fn(predictions, batch['labels'].to(device))
-                        # pred_logits = predictions['logits']
-                        loss = predictions['loss']
-                        cur_epoch_train_loss.append(loss.item())
-                print("forward memory usage:")
-                print(prof_fore.key_averages().table(sort_by="cuda_memory_usage", row_limit=5))
+            predictions = mymodel(input_ids, attention_mask, labels)
+            
+            loss = predictions['loss']
+            cur_epoch_train_loss.append(loss.item())
+            loss.backward()
 
-                with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA],
-                             profile_memory=True, record_shapes=True) as prof_back:
-                    with record_function("backward"):
-                        loss.backward()
-                        optimizer.step()
-                        
-                        
-                print("backward memory usage:")
-                print(prof_back.key_averages().table(sort_by="cuda_memory_usage", row_limit=4))
-            else:
-                predictions = mymodel(input_ids, attention_mask)
-                print(predictions)
-
-                # loss = loss_fn(predictions, batch['labels'].to(device))
-                # pred_logits = predictions['logits']
-                loss = predictions['loss']
-                cur_epoch_train_loss.append(loss.item())
-                loss.backward()
-
-                optimizer.step()
+            optimizer.step()
             
             optimizer.zero_grad()
+
+            mymodel.eval()
+
+            if (index % 500 == 0):
+                evaluate_model(mymodel.get_model(), encoder, is_backward, device)
         
         # print loss metrics
-        avg_loss =  cur_epoch_train_loss.sum() / len(cur_epoch_train_loss)
+        avg_loss =  np.array(cur_epoch_train_loss).sum() / len(cur_epoch_train_loss)
         print(f" ===> Epoch {epoch + 1}")
-        print(f" - Average loss metrics: accuracy={avg_loss}")
+        print(f" - Average loss metrics: {avg_loss}")
         train_loss_list.append(avg_loss)
         
         epoch_list.append(epoch)
@@ -206,6 +193,12 @@ def train(mymodel, num_epochs, train_dataloader, device, lr):
         print(f"Epoch {epoch + 1} took {epoch_end_time - epoch_start_time} seconds")
 
         lr_scheduler.step()
+
+        if (epoch == 0) or (epoch != 0 and prev_loss > avg_loss):
+            print(f"save model for epoch {epoch + 1}!")
+            model = mymodel.get_model()
+            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward")
+            prev_loss = avg_loss
 
 def plot(train_list, valid_list, name, finetune_method):
     
@@ -219,35 +212,34 @@ def plot(train_list, valid_list, name, finetune_method):
     plt.savefig(f'{name}_{finetune_method}.png')
 
 
-def pre_process(batch_size, device, small_subset):
+def pre_process(batch_size, device, small_subset, is_backward):
 
-    max_len = 128
-
-    print("Loading the tokenizer...")
-    mytokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-    mytokenizer.pad_token = mytokenizer.eos_token
-
-    print(" >>>>>>>> Initializing the data loaders ... ")
-    train_dataloader = load_datasets(mytokenizer, batch_size=batch_size, 
-                                     device=device, 
-                                     is_core=small_subset)
     # from Hugging Face (transformers), read their documentation to do this.
     print("Loading the model ...")
-    
-    pretrained_model = CustomModelforSequenceGeneration(device=device)
+    model, encoder = load_models(device=device, is_backward=is_backward)
+    pretrained_model = CustomModelforSequenceGeneration(model=model, device=device)
+
+    print(" >>>>>>>> Initializing the data loaders ... ")
+    train_dataloader = load_datasets(batch_size=batch_size, 
+                                     device=device, 
+                                     is_core=small_subset, encoder=encoder, 
+                                     is_backward=is_backward)
 
 
     print("Moving model to device ..." + str(device))
     pretrained_model.to(device)
-    return pretrained_model, train_dataloader
+    return pretrained_model, train_dataloader, encoder
 
 # the entry point of the program
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--small_subset",action='store_true', default=True)
-    parser.add_argument("--num_epochs", type=int, default=5)
-    parser.add_argument("--lr", type=float, default=5e-5)
+    parser.add_argument("--is_backward",action='store_true', default=False)
+    parser.add_argument("--num_epochs", type=int, default=2)
+    parser.add_argument("--lr", type=float, default=1e-6)
     parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--input_size", type=int, default=100)
+    parser.add_argument("--output_size", type=int, default=20)
 
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
@@ -255,14 +247,14 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     assert type(args.small_subset) == bool, "small_subset must be a boolean"
-    global prefix_length
-    prefix_length = args.prefix_length
+    # global prefix_length
+    # prefix_length = args.prefix_length
     #load the data and models
-    pretrained_model, train_dataloader = pre_process(args.batch_size, device,
-                                                     args.small_subset)
+    pretrained_model, train_dataloader, encoder = pre_process(args.batch_size, 
+                                                    device, args.small_subset, args.is_backward)
     print(" >>>>>>>>  Starting training ... ")
     train(pretrained_model, args.num_epochs, train_dataloader,
-          device, args.lr)
+          device, args.lr, encoder, args.is_backward)
     
     # print the GPU memory usage just to make sure things are alright
     print_gpu_memory()

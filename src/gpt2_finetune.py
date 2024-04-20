@@ -5,25 +5,57 @@ from GPT2ForwardBackward.modeling_opengpt2 import OpenGPT2LMHeadModel
 from GPT2ForwardBackward.padded_encoder import Encoder
 from transformers import Trainer, TrainingArguments, GPT2Tokenizer
 
+
+def process_data(text, encoder, max_length=100, is_input=True, is_backward=False):
+    encoded_text = torch.tensor(encoder.encode(text))
+    encoded_attention_mask = torch.ones(max_length)
+    encoded_length = len(encoded_text)
+     # ...(padded / truncated)... x x x x (prompt) x x x x x x (ouput) ...(padded / truncated)...
+
+    # step for truncation
+    if is_input and (encoded_length > max_length):
+        encoded_text = encoded_text[encoded_length - max_length:]
+    elif (not is_input) and (encoded_length > max_length):
+        encoded_text = encoded_text[:max_length]
+    # step for padding
+    elif is_input and (encoded_length < max_length):
+        encoded_text = torch.cat((torch.zeros(max_length - encoded_length), encoded_text))
+        encoded_attention_mask = torch.cat((torch.zeros(max_length - encoded_length), torch.ones(encoded_length)))
+    elif (not is_input) and (encoded_length < max_length):
+        encoded_text = torch.cat((encoded_text, torch.zeros(max_length - encoded_length)))
+        encoded_attention_mask = torch.cat((torch.ones(encoded_length), torch.zeros(max_length - encoded_length)))
+    
+    assert(len(encoded_text) == max_length)
+
+    if is_backward:
+        encoded_text = torch.flip(encoded_text, [0])
+        encoded_attention_mask = torch.flip(encoded_attention_mask, [0])
+
+    return {"input_ids": encoded_text.to(torch.int64), "attention_mask": encoded_attention_mask.to(torch.int64)}
+    
+
 class OpenGPT2Dataset(Dataset):
     
-    def __init__(self, dataset, tokenizer, device):
+    def __init__(self, dataset, device, encoder, is_backward=False, max_length=100):
         self.dataset = dataset
-        self.tokenizer = tokenizer
         self.device = device
+        self.max_length = max_length
+        self.encoder = encoder
+        self.is_backward = is_backward
     
     def __len__(self):
         return len(self.dataset)
     
     def __getitem__(self, idx):
         data = self.dataset[idx]
-
-        data = {"input": self.tokenizer(data["instances"][0]["instruction_with_input"], 
-                                          padding="max_length", truncation=True, max_length=1024, 
-                                          return_tensors="pt"),
-                "output": self.tokenizer(data["instances"][0]["output"], 
-                                         padding="max_length", truncation=True, max_length=1024, 
-                                         return_tensors="pt")}
+        if self.is_backward:
+            input_data = process_data(data["instances"][0]["instruction_with_input"] + " " + data["instances"][0]["output"], self.encoder, max_length=self.max_length * 2, is_input=True, is_backward=self.is_backward)
+            output_data = process_data(data["instances"][0]["output"], self.encoder, max_length=self.max_length * 2, is_input=False, is_backward=self.is_backward)
+        else:
+            input_data = process_data(data["instances"][0]["instruction_with_input"], self.encoder, max_length=self.max_length, is_input=True, is_backward=self.is_backward)
+            output_data = process_data(data["instances"][0]["instruction_with_input"] + " " + data["instances"][0]["output"], self.encoder, max_length=self.max_length * 2, is_input=False, is_backward=self.is_backward)
+        
+        data = {"input": output_data, "output": input_data} if self.is_backward else {"input": input_data,"output": output_data}
         
         return {"input_ids": data["input"]["input_ids"].to(self.device),
                 "attention_mask": data["input"]["attention_mask"].to(self.device),
@@ -43,13 +75,14 @@ class OpenGPT2Trainer(Trainer):
                              batch_size=self.args.train_batch_size)
 
 
-def load_models(device=torch.device("cpu")) -> Tuple[torch.nn.Module, Encoder]:
+def load_models(device=torch.device("cpu"), is_backward=False) -> Tuple[torch.nn.Module, Encoder]:
     # PATH_TO_FORWARD = "/home/cs601-zxia15/NLP_final_project/params/opengpt2_pytorch_forward"
-    PATH_TO_FORWARD = "/home/cs601-zxia15/NLP_final_project/params/opengpt2_pytorch_forward"
+    PATH_TO_FORWARD = "/home/zxia15/NLP_final_project/params/opengpt2_pytorch_forward"
+    PATH_TO_BACKWARD = "/home/zxia15/NLP_final_project/params/opengpt2_pytorch_backward"
     # model_forward = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FORWARD).to(device)
-    model_forward = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FORWARD).to(device)
+    model = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_BACKWARD).to(device) if is_backward else OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FORWARD).to(device)
     encoder = Encoder()
-    return model_forward, encoder
+    return model, encoder
 
 def read_jsonl(file_path):
     data = []
@@ -59,13 +92,13 @@ def read_jsonl(file_path):
     return data
 
 
-def load_datasets(tokenizer, batch_size, device=torch.device("cpu"), is_core=True):
+def load_datasets(batch_size, device=torch.device("cpu"), is_core=True, encoder=None, is_backward=False):
     
-    PATH_TO_CORE_DATASET = "/home/cs601-zxia15/NLP_final_project/data/unnatural-instructions/core_data.jsonl" 
-    PATH_TO_FULL_DATASET = "/home/cs601-zxia15/NLP_final_project/data/unnatural-instructions/full_data.jsonl" 
+    PATH_TO_CORE_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/core_data.jsonl" 
+    PATH_TO_FULL_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/full_data.jsonl" 
 
     data_path = PATH_TO_CORE_DATASET if is_core else PATH_TO_FULL_DATASET
-    dataset = OpenGPT2Dataset(read_jsonl(data_path), tokenizer, device)
+    dataset = OpenGPT2Dataset(read_jsonl(data_path), device, encoder=encoder, is_backward=is_backward)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
  
     return dataloader
@@ -81,10 +114,10 @@ def fine_tune_model():
     # Define training arguments
     print("set training args")
     training_args = TrainingArguments(
-    per_device_train_batch_size=1,
-    num_train_epochs=3,
+    per_device_train_batch_size=8,
+    num_train_epochs=5,
     logging_dir='./logs',
-    output_dir = "/home/cs601-zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_forward"
+    output_dir = "/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_forward"
     )
 
     # Initialize Trainer
@@ -98,7 +131,7 @@ def fine_tune_model():
 
     # Save the fine-tuned model
     print("save model!")
-    model.save_pretrained("/home/cs601-zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_forward_02")
+    model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_forward_02")
 
 if __name__ == "__main__":
     fine_tune_model()

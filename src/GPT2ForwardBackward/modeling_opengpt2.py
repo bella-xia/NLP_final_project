@@ -757,11 +757,9 @@ class OpenGPT2Model(OpenGPT2PreTrainedModel):
             position_ids = position_ids.view(-1, input_shape[-1])
 
         if past_key_values is None:
-            print("past key values is None")
             past_length = 0
             past_key_values = [None] * len(self.h)
         else:
-            print(past_key_values)
             past_length = past_key_values[0][0].size(-2)
         if position_ids is None:
             device = input_ids.device if input_ids is not None else inputs_embeds.device
