@@ -241,9 +241,9 @@ if __name__ == "__main__":
     parser.add_argument("--small_subset",action='store_true', default=True)
     parser.add_argument("--is_backward",action='store_true', default=False)
     parser.add_argument("--num_epochs", type=int, default=2)
-    parser.add_argument("--lr", type=float, default=1e-6)
+    parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--input_size", type=int, default=100)
+    parser.add_argument("--input_size", type=int, default=30)
     parser.add_argument("--output_size", type=int, default=30)
 
     args = parser.parse_args()
