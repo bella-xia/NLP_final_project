@@ -1,8 +1,8 @@
 import torch, argparse, subprocess, time
-from torch.profiler import profile, record_function, ProfilerActivity
-from transformers import GPT2Tokenizer, get_scheduler
+from transformers import get_scheduler
 from gpt2_finetune import load_datasets, load_models
 from load_model import get_forward_backward_preds
+from torch.utils.data import DataLoader
 
 import evaluate as evaluate
 import numpy as np
@@ -40,7 +40,7 @@ def print_gpu_memory():
         print(p.decode("utf-8"))
 
 
-def evaluate_model(model, encoder, is_backward, device):
+def evaluate_model(model, encoder, dataset, is_backward, device):
     """
     Evaluate a PyTorch Model
     :param torch.nn.Module model: the model to be evaluated
@@ -50,7 +50,9 @@ def evaluate_model(model, encoder, is_backward, device):
     """
     # load metrics
     # dev_accuracy = evaluate.load('accuracy')
-    input_text = "not very interesting paper by Peter West."
+    input_text = dataset.get_random_instance()
+    print("prompt give: ")
+    print(input_text)
     is_forward = ~is_backward
     get_forward_backward_preds(model, encoder, input_text, is_forward, device)
     return
@@ -85,7 +87,7 @@ def evaluate_model(model, encoder, is_backward, device):
     # compute and return metrics
     # return dev_accuracy.compute()
 
-def train(mymodel, num_epochs, train_dataloader, device, lr, encoder, is_backward):
+def train(mymodel, num_epochs, batch_size, train_dataset, device, lr, encoder, is_backward):
     """ Train a PyTorch Module
 
     :param torch.nn.Module mymodel: the model to be trained
@@ -99,6 +101,9 @@ def train(mymodel, num_epochs, train_dataloader, device, lr, encoder, is_backwar
     """
 
     # here, we use the AdamW optimizer. Use torch.optim.AdamW
+    print(" >>>>>>>>  Loading dataloader")
+    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
     print(" >>>>>>>>  Initializing optimizer")
     
     weight_decay = 0.01
@@ -179,7 +184,7 @@ def train(mymodel, num_epochs, train_dataloader, device, lr, encoder, is_backwar
             mymodel.eval()
 
             if (index % 500 == 0):
-                evaluate_model(mymodel.get_model(), encoder, is_backward, device)
+                evaluate_model(mymodel.get_model(), encoder, train_dataset, is_backward, device)
         
         # print loss metrics
         avg_loss =  np.array(cur_epoch_train_loss).sum() / len(cur_epoch_train_loss)
@@ -212,7 +217,7 @@ def plot(train_list, valid_list, name, finetune_method):
     plt.savefig(f'{name}_{finetune_method}.png')
 
 
-def pre_process(batch_size, device, small_subset, is_backward):
+def pre_process(device, small_subset, is_backward, input_size, output_size):
 
     # from Hugging Face (transformers), read their documentation to do this.
     print("Loading the model ...")
@@ -220,15 +225,15 @@ def pre_process(batch_size, device, small_subset, is_backward):
     pretrained_model = CustomModelforSequenceGeneration(model=model, device=device)
 
     print(" >>>>>>>> Initializing the data loaders ... ")
-    train_dataloader = load_datasets(batch_size=batch_size, 
-                                     device=device, 
-                                     is_core=small_subset, encoder=encoder, 
-                                     is_backward=is_backward)
+    train_dataset = load_datasets(is_core=small_subset, encoder=encoder, 
+                                     is_backward=is_backward,
+                                     input_size=input_size, output_size=output_size,
+                                     device=device)
 
 
     print("Moving model to device ..." + str(device))
     pretrained_model.to(device)
-    return pretrained_model, train_dataloader, encoder
+    return pretrained_model, train_dataset, encoder
 
 # the entry point of the program
 if __name__ == "__main__":
@@ -239,7 +244,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=1e-6)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--input_size", type=int, default=100)
-    parser.add_argument("--output_size", type=int, default=20)
+    parser.add_argument("--output_size", type=int, default=30)
 
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
@@ -250,10 +255,10 @@ if __name__ == "__main__":
     # global prefix_length
     # prefix_length = args.prefix_length
     #load the data and models
-    pretrained_model, train_dataloader, encoder = pre_process(args.batch_size, 
-                                                    device, args.small_subset, args.is_backward)
+    pretrained_model, train_dataset, encoder = pre_process(device, args.small_subset, args.is_backward,
+                                                    args.input_size, args.output_size)
     print(" >>>>>>>>  Starting training ... ")
-    train(pretrained_model, args.num_epochs, train_dataloader,
+    train(pretrained_model, args.num_epochs, args.batch_size, train_dataset,
           device, args.lr, encoder, args.is_backward)
     
     # print the GPU memory usage just to make sure things are alright

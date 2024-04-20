@@ -1,12 +1,12 @@
-import torch, json
-from torch.utils.data import Dataset, DataLoader
+import torch, json, random
+from torch.utils.data import Dataset
 from typing import Tuple
 from GPT2ForwardBackward.modeling_opengpt2 import OpenGPT2LMHeadModel
 from GPT2ForwardBackward.padded_encoder import Encoder
 from transformers import Trainer, TrainingArguments, GPT2Tokenizer
 
 
-def process_data(text, encoder, max_length=100, is_input=True, is_backward=False):
+def process_data(text, encoder, max_length, is_input=True, is_backward=False):
     encoded_text = torch.tensor(encoder.encode(text))
     encoded_attention_mask = torch.ones(max_length)
     encoded_length = len(encoded_text)
@@ -36,31 +36,41 @@ def process_data(text, encoder, max_length=100, is_input=True, is_backward=False
 
 class OpenGPT2Dataset(Dataset):
     
-    def __init__(self, dataset, device, encoder, is_backward=False, max_length=100):
+    def __init__(self, dataset, device, encoder, is_backward, input_size, output_size, random_seed=42):
         self.dataset = dataset
+        self.dataset_length = len(dataset)
         self.device = device
-        self.max_length = max_length
         self.encoder = encoder
+        self.input_output_size, self.instruction_size = (input_size, output_size) if is_backward else (output_size, input_size) 
         self.is_backward = is_backward
+        random.seed(random_seed)
     
     def __len__(self):
-        return len(self.dataset)
+        return self.dataset_length
     
     def __getitem__(self, idx):
         data = self.dataset[idx]
-        if self.is_backward:
-            input_data = process_data(data["instances"][0]["instruction_with_input"] + " " + data["instances"][0]["output"], self.encoder, max_length=self.max_length * 2, is_input=True, is_backward=self.is_backward)
-            output_data = process_data(data["instances"][0]["output"], self.encoder, max_length=self.max_length * 2, is_input=False, is_backward=self.is_backward)
-        else:
-            input_data = process_data(data["instances"][0]["instruction_with_input"], self.encoder, max_length=self.max_length, is_input=True, is_backward=self.is_backward)
-            output_data = process_data(data["instances"][0]["instruction_with_input"] + " " + data["instances"][0]["output"], self.encoder, max_length=self.max_length * 2, is_input=False, is_backward=self.is_backward)
+
+        instruction_is_input = False if self.is_backward else True
         
-        data = {"input": output_data, "output": input_data} if self.is_backward else {"input": input_data,"output": output_data}
+        instruction_data = process_data(data['instruction'], 
+                                        self.encoder, max_length=self.instruction_size, 
+                                        is_input= instruction_is_input, is_backward=self.is_backward)
+        output_and_input_data = process_data("Provided: " + data["instances"][0]["input"] + "; Result: " + data["instances"][0]["output"], 
+                                             self.encoder, max_length=self.input_output_size, 
+                                             is_input=~instruction_is_input, is_backward=self.is_backward)
+        
+        data = {"input": output_and_input_data, "output": instruction_data} if self.is_backward else {"input": instruction_data,"output": output_and_input_data}
         
         return {"input_ids": data["input"]["input_ids"].to(self.device),
                 "attention_mask": data["input"]["attention_mask"].to(self.device),
                 "labels": data["output"]["input_ids"].to(self.device),
                }
+
+    def get_random_instance(self):
+        random_idx = random.randrange(0, self.dataset_length)
+        return ("Provided: " + self.dataset[random_idx]["instances"][0]["input"] + "; Result: " + self.dataset[random_idx]["instances"][0]["output"]) if self.is_backward else (self.dataset[random_idx]['instruction'])
+
 
 class OpenGPT2Trainer(Trainer):
     def __init__(self, *args, device=torch.device("cpu"), is_core=True, **kwargs):
@@ -92,16 +102,17 @@ def read_jsonl(file_path):
     return data
 
 
-def load_datasets(batch_size, device=torch.device("cpu"), is_core=True, encoder=None, is_backward=False):
+def load_datasets(is_core, encoder, is_backward,
+                  input_size, output_size, device=torch.device("cpu")):
     
     PATH_TO_CORE_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/core_data.jsonl" 
     PATH_TO_FULL_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/full_data.jsonl" 
 
     data_path = PATH_TO_CORE_DATASET if is_core else PATH_TO_FULL_DATASET
-    dataset = OpenGPT2Dataset(read_jsonl(data_path), device, encoder=encoder, is_backward=is_backward)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    dataset = OpenGPT2Dataset(read_jsonl(data_path), device, encoder=encoder, is_backward=is_backward,
+                              input_size=input_size, output_size=output_size)
  
-    return dataloader
+    return dataset
 
 def fine_tune_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
