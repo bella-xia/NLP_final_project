@@ -243,8 +243,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_epochs", type=int, default=2)
     parser.add_argument("--lr", type=float, default=5e-5)
     parser.add_argument("--batch_size", type=int, default=8)
-    parser.add_argument("--input_size", type=int, default=30)
-    parser.add_argument("--output_size", type=int, default=30)
+    parser.add_argument("--max_length", type=int, default=100)
 
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
@@ -256,7 +255,7 @@ if __name__ == "__main__":
     # prefix_length = args.prefix_length
     #load the data and models
     pretrained_model, train_dataset, encoder = pre_process(device, args.small_subset, args.is_backward,
-                                                    args.input_size, args.output_size)
+                                                    args.max_length)
     print(" >>>>>>>>  Starting training ... ")
     train(pretrained_model, args.num_epochs, args.batch_size, train_dataset,
           device, args.lr, encoder, args.is_backward)
