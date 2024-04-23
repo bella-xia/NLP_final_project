@@ -20,8 +20,8 @@ class Encoder():
         encoded_text = self.encoder.encode(text)
         return [t + 1 for t in self.encoder.encode(text)]
     
-    def apply(self, text):
-        return self.encoder(text)
+    def get_pad_token(self):
+        return self.encoder.pad_token_id
     
     def decode(self, tokens):
         tokens_shifted = [t - 1 for t in tokens if t !=0 ]

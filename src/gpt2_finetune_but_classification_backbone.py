@@ -142,7 +142,7 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
 
         mymodel.train()
 
-        for _, batch in tqdm(enumerate(train_dataloader)):
+        for index, batch in tqdm(enumerate(train_dataloader)):
 
             """
             You need to make some changes here to make this function work.
@@ -173,6 +173,16 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
 
 
             predictions = mymodel(input_ids, attention_mask, labels)
+
+            if index == 0:
+                non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
+                input_output_text = encoder.decode(torch.flip(input_ids[0], [0]))
+                pred_in_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
+                mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
+                expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
+                print(f"current input : {input_output_text}\n")
+                print(f"predicted text : {pred_in_text}\n")
+                print(f"expected prediction : {expected_pred}\n")
             
             loss = predictions['loss']
             cur_epoch_train_ppl.append(torch.exp(loss).item())
@@ -183,15 +193,17 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
             
             optimizer.zero_grad()
         
-        lr_scheduler.step()
+            lr_scheduler.step()
         # print loss metrics
         avg_loss =  np.array(cur_epoch_train_loss).sum() / len(cur_epoch_train_loss)
         avg_ppl = np.array(cur_epoch_train_ppl).sum() / len(cur_epoch_train_loss)
-        print(f" ===> Epoch {epoch + 1}")
+        print(f" ===> Train Epoch {epoch + 1}")
         print(f" - Average Train loss metrics: {avg_loss}")
         print(f" - Average Train perplexity metrics: {avg_ppl}")
         train_loss_list.append(avg_loss)
         train_ppl_list.append(avg_ppl)
+
+        print(f"Epoch {epoch + 1} validation:")
         
         mymodel.eval()
 
@@ -228,9 +240,11 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
             predictions = mymodel(input_ids, attention_mask, labels)
 
             if index == 0:
-                input_output_text = encoder.decode(torch.flip(input_ids[0]))
-                pred_in_text = encoder.decode(torch.flip(predictions['logits'][0]))
-                expected_pred = encoder.decode(torch.flip(labels[0]))
+                non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
+                input_output_text = encoder.decode(torch.flip(input_ids[0], [0]))
+                pred_in_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
+                mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
+                expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
                 print(f"current input : {input_output_text}\n")
                 print(f"predicted text : {pred_in_text}\n")
                 print(f"expected prediction : {expected_pred}\n")
@@ -242,7 +256,7 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
         # print loss metrics
         avg_val_loss =  np.array(cur_epoch_val_loss).sum() / len(cur_epoch_val_loss)
         avg_val_ppl =  np.array(cur_epoch_val_ppl).sum() / len(cur_epoch_val_loss)
-        print(f" ===> Epoch {epoch + 1}")
+        print(f" ===> Val Epoch {epoch + 1}")
         print(f" - Average Validation loss metrics: {avg_val_loss}")
         print(f" - Average Validation perplexity metrics: {avg_val_ppl}")
         val_loss_list.append(avg_val_loss)
@@ -256,7 +270,7 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
         if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
             print(f"save model for epoch {epoch + 1}!")
             model = mymodel.get_model()
-            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward")
+            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_trial_2")
             prev_loss = avg_val_loss
     
     mymodel.eval()
@@ -272,9 +286,11 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
         predictions = mymodel(input_ids, attention_mask, labels)
 
         if index == 0:
-            input_output_text = encoder.decode(torch.flip(input_ids[0]))
-            pred_in_text = encoder.decode(torch.flip(predictions['logits'][0]))
-            expected_pred = encoder.decode(torch.flip(labels[0]))
+            non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
+            input_output_text = encoder.decode(torch.flip(input_ids[0], [0]))
+            pred_in_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
+            mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
+            expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
             print(f"current input : {input_output_text}\n")
             print(f"predicted text : {pred_in_text}\n")
             print(f"expected prediction : {expected_pred}\n")
@@ -290,8 +306,8 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
     print(f" - Dead loss metrics: {test_loss}")
     print(f" - Dead perplexity metrics: {test_ppl}")
 
-    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph', False)
-    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph', True)
+    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Trial 2', False)
+    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Trial 2', True)
 
 def plot(train_list, valid_list, name, is_ppl):
     
@@ -325,9 +341,9 @@ def pre_process(device, small_subset, is_backward, max_length, batch_size):
 # the entry point of the program
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--small_subset",action='store_true', default=True)
+    parser.add_argument("--small_subset",action='store_true', default=False)
     parser.add_argument("--is_backward",action='store_true', default=False)
-    parser.add_argument("--num_epochs", type=int, default=2)
+    parser.add_argument("--num_epochs", type=int, default=7)
     parser.add_argument("--lr", type=float, default=1e-5)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--max_length", type=int, default=100)

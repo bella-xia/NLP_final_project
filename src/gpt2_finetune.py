@@ -6,45 +6,59 @@ from GPT2ForwardBackward.padded_encoder import Encoder
 from transformers import Trainer, TrainingArguments, GPT2Tokenizer
 
 
-def process_backward_data(io_text, instruction, encoder, max_length):
-    encoded_io_text = torch.flip(torch.tensor(encoder.encode(io_text)), [0])
-    instruction_text = torch.flip(torch.tensor(encoder.encode(instruction + " ")), [0])
-    encoded_attention_mask = torch.ones(max_length)
+def process_backward_data(io_text, instruction, encoder, max_length, is_train=False):
+    encoded_io_text = torch.flip(torch.tensor(encoder.encode("[SEP]" + io_text)), [0])
+    instruction_text = torch.flip(torch.tensor(encoder.encode(instruction)), [0])
     io_encoded_length = len(encoded_io_text)
     instruction_encoded_length = len(instruction_text)
      # ...(padded / truncated)... x x x x (prompt) x x x x x x (ouput) ...(padded / truncated)...
 
     # step for truncation
     if (io_encoded_length + instruction_encoded_length > max_length):
+        # print("truncating!")
         truncated_length = io_encoded_length + instruction_encoded_length - max_length
-        io_truncated_length = truncated_length / 2
+        truncation_ratio = float(io_encoded_length) / float(io_encoded_length + instruction_encoded_length)
+        io_truncated_length = int(truncated_length * truncation_ratio)
         instruction_truncated_length = truncated_length - io_truncated_length
-        full_encoded_text = torch.cat([encoded_io_text[io_truncated_length:], instruction_text[:instruction_encoded_length-instruction_truncated_length]])
-        instruction_encoded_text = torch.cat([torch.ones(io_encoded_length - io_truncated_length - 1) * -100, instruction_text[:instruction_encoded_length-instruction_truncated_length], torch.tensor([-100])])
+        # print(io_encoded_length, instruction_encoded_length, truncated_length, io_truncated_length, instruction_truncated_length)
+        if is_train:
+            full_encoded_text = torch.cat([encoded_io_text[io_truncated_length:], instruction_text[:instruction_encoded_length - instruction_truncated_length]])
+            encoded_attention_mask = torch.ones(max_length)
+        else:
+            full_encoded_text = torch.cat([encoded_io_text[io_truncated_length:], torch.zeros(instruction_encoded_length - instruction_truncated_length)])
+            encoded_attention_mask = torch.cat([torch.ones(io_encoded_length - io_truncated_length), torch.zeros(instruction_encoded_length - instruction_truncated_length)])
+        instruction_encoded_text = torch.cat([torch.ones(io_encoded_length - io_truncated_length - 1) * -100, instruction_text[:instruction_encoded_length-instruction_truncated_length + 1]])
     else:
+        # print("padding!")
         padded_length = max_length - io_encoded_length - instruction_encoded_length
-        full_encoded_text = torch.cat([encoded_io_text, instruction_text, torch.zeros(padded_length)])
-        instruction_encoded_text = torch.cat([torch.ones(io_encoded_length - 1) * -100, instruction_text, torch.ones(padded_length + 1) * -100])
-        encoded_attention_mask = torch.cat([torch.ones(io_encoded_length + instruction_encoded_length), torch.zeros(padded_length)])
+        if is_train:
+            full_encoded_text = torch.cat([encoded_io_text, instruction_text, torch.zeros(padded_length)])
+            encoded_attention_mask = torch.cat([torch.ones(io_encoded_length + instruction_encoded_length), torch.zeros(padded_length)])
+        else:
+            full_encoded_text = torch.cat([encoded_io_text, torch.zeros(instruction_encoded_length + padded_length)])
+            encoded_attention_mask = torch.cat([torch.ones(io_encoded_length), torch.zeros(instruction_encoded_length + padded_length)])
+        instruction_encoded_text = torch.cat([torch.ones(io_encoded_length - 1) * -100, instruction_text, torch.zeros(padded_length + 1)])
+        
 
-
+    # print(len(full_encoded_text), len(instruction_encoded_text), len(encoded_attention_mask))
     assert(len(full_encoded_text) == max_length)
     assert(len(instruction_encoded_text) == max_length)
     assert(len(encoded_attention_mask) == max_length)
 
     return {"input_ids": full_encoded_text.to(torch.int64), "attention_mask": encoded_attention_mask.to(torch.int64),
-            "labels": instruction_encoded_text}
+            "labels": instruction_encoded_text.to(torch.int64)}
     
 
 class OpenGPT2Dataset(Dataset):
     
-    def __init__(self, dataset, device, encoder, is_backward, max_length, random_seed=42):
+    def __init__(self, dataset, device, encoder, is_backward, max_length, is_train, random_seed=42):
         self.dataset = dataset
         self.dataset_length = len(dataset)
         self.device = device
         self.encoder = encoder
         self.max_length = max_length
         self.is_backward = is_backward
+        self.is_train = is_train
         random.seed(random_seed)
     
     def __len__(self):
@@ -55,7 +69,8 @@ class OpenGPT2Dataset(Dataset):
 
         if self.is_backward:
             return process_backward_data("Provided: " + data["instances"][0]["input"] + "; Result: " + data["instances"][0]["output"],
-                                         data['instruction'], self.encoder, max_length=self.max_length)
+                                         data['instruction'], self.encoder, max_length=self.max_length,
+                                         is_train=self.is_train)
         else:
             raise Exception("Unimplemented forward fine tuning. Please ask Jiefu.")
 
@@ -98,17 +113,17 @@ def load_datasets(is_core, encoder, is_backward, batch_size,
 
     data_path = PATH_TO_CORE_DATASET if is_core else PATH_TO_FULL_DATASET
     data = read_jsonl(data_path)
-    train_len, val_len = len(data) * train_val_ratios[0], len(data) * train_val_ratios[1]
+    train_len, val_len = int(len(data) * train_val_ratios[0]), int(len(data) * train_val_ratios[1])
 
     train_dataset = OpenGPT2Dataset(data[:train_len], device, encoder=encoder, is_backward=is_backward,
-                                    max_length=max_length)
+                                    max_length=max_length, is_train=True)
     val_dataset = OpenGPT2Dataset(data[train_len:train_len + val_len], device, encoder=encoder, is_backward=is_backward,
-                                    max_length=max_length)
+                                    max_length=max_length, is_train=False)
     test_dataset = OpenGPT2Dataset(data[train_len + val_len:], device, encoder=encoder, is_backward=is_backward,
-                                    max_length=max_length)
+                                    max_length=max_length, is_train=False)
     
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
+    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
  
     return train_dataloader, val_dataloader, test_dataloader

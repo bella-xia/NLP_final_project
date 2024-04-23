@@ -14,4 +14,4 @@ module load anaconda
 conda activate myenv # activate the Python environment
 
 # runs your code
-python -u ../src/gpt2_finetune_but_classification_backbone.py --is_backward
+python -u ../src/gpt2_finetune_but_classification_backbone.py --is_backward --small_subset
