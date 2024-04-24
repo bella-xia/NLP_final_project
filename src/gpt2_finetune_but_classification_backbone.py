@@ -278,7 +278,7 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
         if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
             print(f"save model for epoch {epoch + 1}!")
             model = mymodel.get_model()
-            model.save_pretrained("/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_backward_trial_alpaca")
+            model.save_pretrained("/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_backward_trial_alpaca_alldrop0.15")
             prev_loss = avg_val_loss
     
     mymodel.eval()
@@ -316,15 +316,22 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
 
     plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca per Epoch', False)
     plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Epoch', True)
-    plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch', False)
-    plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Batch', True)
+    plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch', False, False)
+    plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Batch', True, False)
 
-def plot(train_list, valid_list, name, is_ppl):
+def plot(train_list, valid_list, name, is_ppl, same_length=True):
     
     plt.figure()
-    plt.plot(train_list, label='Train')
-    plt.plot(valid_list, label='Validation')
-    plt.xlabel('Epochs')
+    if same_length:
+        plt.plot(train_list, label='Train')
+        plt.plot(valid_list, label='Validation')
+    else:
+        train_x = range(len(train_list))
+        valid_x = np.linspace(0, len(train_list)-1, num=len(valid_list))  # Correctly spaced x values for validation data
+        plt.plot(train_x, train_list, label='Train')
+        plt.plot(valid_x, valid_list, label='Validation')
+        
+    plt.xlabel('Epochs' if same_length else 'Batches')
     plt.ylabel('Perplexity' if is_ppl else 'Loss')
     plt.title('Train vs Validation')
     plt.legend()
