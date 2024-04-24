@@ -270,7 +270,7 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
         if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
             print(f"save model for epoch {epoch + 1}!")
             model = mymodel.get_model()
-            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_trial_2")
+            model.save_pretrained("/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_backward_trial_alpaca")
             prev_loss = avg_val_loss
     
     mymodel.eval()
@@ -306,8 +306,8 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
     print(f" - Dead loss metrics: {test_loss}")
     print(f" - Dead perplexity metrics: {test_ppl}")
 
-    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Trial 2', False)
-    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Trial 2', True)
+    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca', False)
+    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca', True)
 
 def plot(train_list, valid_list, name, is_ppl):
     

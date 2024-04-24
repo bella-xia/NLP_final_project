@@ -68,8 +68,7 @@ class OpenGPT2Dataset(Dataset):
         data = self.dataset[idx]
 
         if self.is_backward:
-            return process_backward_data("Provided: " + data["instances"][0]["input"] + "; Result: " + data["instances"][0]["output"],
-                                         data['instruction'], self.encoder, max_length=self.max_length,
+            return process_backward_data(data["output"], data['instruction'], self.encoder, max_length=self.max_length,
                                          is_train=self.is_train)
         else:
             raise Exception("Unimplemented forward fine tuning. Please ask Jiefu.")
@@ -90,8 +89,8 @@ class OpenGPT2Trainer(Trainer):
 
 def load_models(device=torch.device("cpu"), is_backward=False) -> Tuple[torch.nn.Module, Encoder]:
     # PATH_TO_FORWARD = "/home/cs601-zxia15/NLP_final_project/params/opengpt2_pytorch_forward"
-    PATH_TO_FORWARD = "/home/zxia15/NLP_final_project/params/opengpt2_pytorch_forward"
-    PATH_TO_BACKWARD = "/home/zxia15/NLP_final_project/params/opengpt2_pytorch_backward"
+    PATH_TO_FORWARD = "/home/mjia8/NLP_final_project/params/opengpt2_pytorch_forward"
+    PATH_TO_BACKWARD = "/home/mjia8/NLP_final_project/params/opengpt2_pytorch_backward"
     # model_forward = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FORWARD).to(device)
     model = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_BACKWARD).to(device) if is_backward else OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FORWARD).to(device)
     encoder = Encoder()
@@ -103,22 +102,30 @@ def read_jsonl(file_path):
         for line in file:
             data.append(json.loads(line))
     return data
+  
+def read_json(file_path):
+    with open(file_path, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+    return data 
+    
 
 
 def load_datasets(is_core, encoder, is_backward, batch_size,
                   max_length, device=torch.device("cpu"), train_val_ratios=[0.8, 0.1]):
     
-    PATH_TO_CORE_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/core_data.jsonl" 
-    PATH_TO_FULL_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/full_data.jsonl" 
+    PATH_TO_CORE_DATASET = "/home/mjia8/NLP_final_project/data/no_input_alphaca_data_cleaned.json" 
+    PATH_TO_FULL_DATASET = "/home/mjia8/NLP_final_project/data/no_input_alphaca_data_cleaned.json" 
 
     data_path = PATH_TO_CORE_DATASET if is_core else PATH_TO_FULL_DATASET
-    data = read_jsonl(data_path)
+    data = read_json(data_path)
+    print(data[0])
     train_len, val_len = int(len(data) * train_val_ratios[0]), int(len(data) * train_val_ratios[1])
 
     train_dataset = OpenGPT2Dataset(data[:train_len], device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=True)
     val_dataset = OpenGPT2Dataset(data[train_len:train_len + val_len], device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=False)
+    # TODO change back :) - i did 
     test_dataset = OpenGPT2Dataset(data[train_len + val_len:], device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=False)
     
@@ -142,7 +149,7 @@ def fine_tune_model():
     per_device_train_batch_size=8,
     num_train_epochs=5,
     logging_dir='./logs',
-    output_dir = "/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_forward"
+    output_dir = "/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_forward"
     )
 
     # Initialize Trainer
@@ -156,7 +163,7 @@ def fine_tune_model():
 
     # Save the fine-tuned model
     print("save model!")
-    model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_forward_02")
+    model.save_pretrained("/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_forward_02")
 
 if __name__ == "__main__":
     fine_tune_model()

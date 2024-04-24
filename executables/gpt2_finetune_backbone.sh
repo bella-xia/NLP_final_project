@@ -8,7 +8,7 @@
 #SBATCH --time=12:00:00
 #SBATCH --qos=qos_gpu
 #SBATCH --job-name="test_gpus"
-#SBATCH --output="gpt2_finetune_backbone.txt" # Path to store logs
+#SBATCH --output="gpt2_finetune_backbone_alpaca.txt" # Path to store logs
 
 module load anaconda
 conda activate myenv # activate the Python environment
