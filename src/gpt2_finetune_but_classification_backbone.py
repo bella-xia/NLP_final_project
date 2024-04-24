@@ -85,6 +85,9 @@ def evaluate_model(model, encoder, dataset, is_backward, device):
 
     # compute and return metrics
     # return dev_accuracy.compute()
+    
+def forward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_dataloader, test_dataloader): 
+    raise Exception("not implemented")
 
 def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_dataloader, test_dataloader):
     """ Train a PyTorch Module
