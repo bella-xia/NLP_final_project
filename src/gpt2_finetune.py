@@ -120,13 +120,15 @@ def load_datasets(is_core, encoder, is_backward, batch_size,
     data = read_json(data_path)
     print(data[0])
     train_len, val_len = int(len(data) * train_val_ratios[0]), int(len(data) * train_val_ratios[1])
-
+    # TODO change back the two variables :( 
+    train_len = 100
+    val_len = 20 
     train_dataset = OpenGPT2Dataset(data[:train_len], device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=True)
     val_dataset = OpenGPT2Dataset(data[train_len:train_len + val_len], device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=False)
-    # TODO change back :) - i did 
-    test_dataset = OpenGPT2Dataset(data[train_len + val_len:], device, encoder=encoder, is_backward=is_backward,
+    # TODO change the 140 back :) - i did 
+    test_dataset = OpenGPT2Dataset(data[train_len + val_len:140], device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=False)
     
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)

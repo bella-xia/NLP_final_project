@@ -121,6 +121,10 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
     
     epoch_list = []
     train_loss_list = []
+    all_train_loss_list = []
+    all_train_ppl_list = []
+    all_val_loss_list = []
+    all_val_ppl_list = []
     train_ppl_list = []
     val_loss_list = []
     val_ppl_list = []
@@ -186,6 +190,8 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
             
             loss = predictions['loss']
             cur_epoch_train_ppl.append(torch.exp(loss).item())
+            all_train_ppl_list.append(torch.exp(loss).item())
+            all_train_loss_list.append(loss.item())
             cur_epoch_train_loss.append(loss.item())
             loss.backward()
 
@@ -250,6 +256,8 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
                 print(f"expected prediction : {expected_pred}\n")
             
             loss = predictions['loss']
+            all_val_loss_list.append(loss.item())
+            all_val_ppl_list.append(torch.exp(loss).item())
             cur_epoch_val_ppl.append(torch.exp(loss).item())
             cur_epoch_val_loss.append(loss.item())
         
@@ -306,8 +314,10 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
     print(f" - Dead loss metrics: {test_loss}")
     print(f" - Dead perplexity metrics: {test_ppl}")
 
-    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca', False)
-    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca', True)
+    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca per Epoch', False)
+    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Epoch', True)
+    plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch', False)
+    plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Batch', True)
 
 def plot(train_list, valid_list, name, is_ppl):
     
@@ -343,8 +353,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--small_subset",action='store_true', default=False)
     parser.add_argument("--is_backward",action='store_true', default=False)
-    parser.add_argument("--num_epochs", type=int, default=7)
-    parser.add_argument("--lr", type=float, default=1e-5)
+    parser.add_argument("--num_epochs", type=int, default=4)
+    parser.add_argument("--lr", type=float, default=5e-6)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--max_length", type=int, default=100)
 
