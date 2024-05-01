@@ -86,7 +86,7 @@ def evaluate_model(model, encoder, dataset, is_backward, device):
     # compute and return metrics
     # return dev_accuracy.compute()
 
-def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_dataloader, test_dataloader):
+def trainer(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_dataloader, test_dataloader, is_backward):
     """ Train a PyTorch Module
 
     :param torch.nn.Module mymodel: the model to be trained
@@ -124,6 +124,10 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
     train_ppl_list = []
     val_loss_list = []
     val_ppl_list = []
+    all_train_loss_list = []
+    all_train_ppl_list = []
+    all_val_loss_list = []
+    all_val_ppl_list = []
 
     prev_loss = 100000
 
@@ -175,18 +179,27 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
             predictions = mymodel(input_ids, attention_mask, labels)
 
             if index == 0:
-                non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
-                input_output_text = encoder.decode(torch.flip(input_ids[0], [0]))
-                pred_in_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
-                mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
-                expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
-                print(f"current input : {input_output_text}\n")
-                print(f"predicted text : {pred_in_text}\n")
+                if is_backward:
+                    # non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
+                    input_text = encoder.decode(torch.flip(input_ids[0], [0]))
+                    pred_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
+                    mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
+                    expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
+                else:
+                    # non_instru_length = attention_mask.size()[0] - torch.sum(attention_mask)
+                    input_text = encoder.decode(input_ids[0])
+                    pred_text = encoder.decode(torch.argmax(predictions['logits'][0], dim=1))
+                    mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
+                    expected_pred = encoder.decode(mod_labels)
+                print(f"current input : {input_text}\n")
+                print(f"predicted text : {pred_text}\n")
                 print(f"expected prediction : {expected_pred}\n")
             
             loss = predictions['loss']
             cur_epoch_train_ppl.append(torch.exp(loss).item())
             cur_epoch_train_loss.append(loss.item())
+            all_train_loss_list.append(loss.item())
+            all_train_ppl_list.append(torch.exp(loss).item())
             loss.backward()
 
             optimizer.step()
@@ -240,18 +253,27 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
             predictions = mymodel(input_ids, attention_mask, labels)
 
             if index == 0:
-                non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
-                input_output_text = encoder.decode(torch.flip(input_ids[0], [0]))
-                pred_in_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
-                mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
-                expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
-                print(f"current input : {input_output_text}\n")
-                print(f"predicted text : {pred_in_text}\n")
+                if is_backward:
+                    # non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
+                    input_text = encoder.decode(torch.flip(input_ids[0], [0]))
+                    pred_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
+                    mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
+                    expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
+                else:
+                    # non_instru_length = attention_mask.size()[0] - torch.sum(attention_mask)
+                    input_text = encoder.decode(input_ids[0])
+                    pred_text = encoder.decode(torch.argmax(predictions['logits'][0], dim=1))
+                    mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
+                    expected_pred = encoder.decode(mod_labels)
+                print(f"current input : {input_text}\n")
+                print(f"predicted text : {pred_text}\n")
                 print(f"expected prediction : {expected_pred}\n")
             
             loss = predictions['loss']
             cur_epoch_val_ppl.append(torch.exp(loss).item())
             cur_epoch_val_loss.append(loss.item())
+            all_val_loss_list.append(loss.item())
+            all_val_ppl_list.append(torch.exp(loss).item())
         
         # print loss metrics
         avg_val_loss =  np.array(cur_epoch_val_loss).sum() / len(cur_epoch_val_loss)
@@ -270,7 +292,7 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
         if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
             print(f"save model for epoch {epoch + 1}!")
             model = mymodel.get_model()
-            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_trial_2")
+            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_forward_alcapa")
             prev_loss = avg_val_loss
     
     mymodel.eval()
@@ -286,13 +308,20 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
         predictions = mymodel(input_ids, attention_mask, labels)
 
         if index == 0:
-            non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
-            input_output_text = encoder.decode(torch.flip(input_ids[0], [0]))
-            pred_in_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
-            mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
-            expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
-            print(f"current input : {input_output_text}\n")
-            print(f"predicted text : {pred_in_text}\n")
+            if is_backward:
+                # non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
+                input_text = encoder.decode(torch.flip(input_ids[0], [0]))
+                pred_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
+                mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
+                expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
+            else:
+                # non_instru_length = attention_mask.size()[0] - torch.sum(attention_mask)
+                input_text = encoder.decode(input_ids[0])
+                pred_text = encoder.decode(torch.argmax(predictions['logits'][0], dim=1))
+                mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
+                expected_pred = encoder.decode(mod_labels)
+            print(f"current input : {input_text}\n")
+            print(f"predicted text : {pred_text}\n")
             print(f"expected prediction : {expected_pred}\n")
             
         loss = predictions['loss']
@@ -306,15 +335,24 @@ def backward_train(mymodel, num_epochs, device, lr, encoder, train_dataloader, v
     print(f" - Dead loss metrics: {test_loss}")
     print(f" - Dead perplexity metrics: {test_ppl}")
 
-    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Trial 2', False)
-    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Trial 2', True)
+    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca per Epoch Forward', False)
+    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Epoch Forward', True)
+    plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch Forward', False, False)
+    plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Batch Forward', True, False)
 
-def plot(train_list, valid_list, name, is_ppl):
+def plot(train_list, valid_list, name, is_ppl, same_length=True):
     
     plt.figure()
-    plt.plot(train_list, label='Train')
-    plt.plot(valid_list, label='Validation')
-    plt.xlabel('Epochs')
+    if same_length:
+        plt.plot(train_list, label='Train')
+        plt.plot(valid_list, label='Validation')
+    else:
+        train_x = range(len(train_list))
+        valid_x = np.linspace(0, len(train_list)-1, num=len(valid_list))  # Correctly spaced x values for validation data
+        plt.plot(train_x, train_list, label='Train')
+        plt.plot(valid_x, valid_list, label='Validation')
+        
+    plt.xlabel('Epochs' if same_length else 'Batches')
     plt.ylabel('Perplexity' if is_ppl else 'Loss')
     plt.title('Train vs Validation')
     plt.legend()
@@ -343,8 +381,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--small_subset",action='store_true', default=False)
     parser.add_argument("--is_backward",action='store_true', default=False)
-    parser.add_argument("--num_epochs", type=int, default=7)
-    parser.add_argument("--lr", type=float, default=1e-5)
+    parser.add_argument("--num_epochs", type=int, default=15)
+    parser.add_argument("--lr", type=float, default=1e-6)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--max_length", type=int, default=100)
 
@@ -361,9 +399,9 @@ if __name__ == "__main__":
         device, args.small_subset, args.is_backward,
         args.max_length, args.batch_size)
     print(" >>>>>>>>  Starting training ... ")
-    backward_train(pretrained_model, args.num_epochs,
+    trainer(pretrained_model, args.num_epochs,
           device, args.lr, encoder, 
-          train_dataloader, val_dataloader, test_dataloader)
+          train_dataloader, val_dataloader, test_dataloader, args.is_backward)
     
     # print the GPU memory usage just to make sure things are alright
     print_gpu_memory()
