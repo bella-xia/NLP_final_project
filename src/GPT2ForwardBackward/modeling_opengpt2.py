@@ -731,6 +731,7 @@ class OpenGPT2Model(OpenGPT2PreTrainedModel):
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
+        position_reverse=False
     ):
         output_attentions = output_attentions if output_attentions is not None else self.config.output_attentions
         output_hidden_states = (
@@ -764,7 +765,11 @@ class OpenGPT2Model(OpenGPT2PreTrainedModel):
         if position_ids is None:
             device = input_ids.device if input_ids is not None else inputs_embeds.device
             position_ids = torch.arange(past_length, input_shape[-1] + past_length, dtype=torch.long, device=device)
+            special_position_ids = torch.flip(position_ids, [0]) if position_reverse else position_ids
             position_ids = position_ids.unsqueeze(0).view(-1, input_shape[-1])
+            special_position_ids_reshaped = special_position_ids.unsqueeze(0).view(-1, input_shape[-1])
+            print(special_position_ids.size(), special_position_ids_reshaped.size())
+            # print(special_position_ids_reshaped)
 
         # Attention mask.
         if attention_mask is not None:
@@ -1000,6 +1005,7 @@ class OpenGPT2LMHeadModel(OpenGPT2PreTrainedModel):
         output_attentions=None,
         output_hidden_states=None,
         return_dict=None,
+        position_reverse=False
     ):
         r"""
         labels (:obj:`torch.LongTensor` of shape :obj:`(batch_size, sequence_length)`, `optional`):
@@ -1023,6 +1029,7 @@ class OpenGPT2LMHeadModel(OpenGPT2PreTrainedModel):
             output_attentions=output_attentions,
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
+            position_reverse=position_reverse
         )
         hidden_states = transformer_outputs[0]
 

@@ -14,7 +14,7 @@ def model_generate(
         Most likely you'll want to make sure to be in model.eval() mode of operation for this.
         """
         # predictable_tokens = max_new_tokens - idx.size()[1]
-        predictable_tokens = 60
+        predictable_tokens = 2
         model.eval()
         with torch.no_grad():
             for _ in range(predictable_tokens):
@@ -119,10 +119,10 @@ if __name__ == "__main__":
     START_POINT = int(len(data) * 0.8)
     END_POINT = int(len(data))
 
-    random_idx = [random.randint(0, START_POINT) for _ in range(10)]
-    random_idx.extend([random.randint(START_POINT , END_POINT) for _ in range(10)])
+    random_idx = [random.randint(0, START_POINT) for _ in range(2)]
+    # random_idx.extend([random.randint(START_POINT , END_POINT) for _ in range(2)])
 
-    print(random_idx)
+    # print(random_idx)
     output_arr = []
     for idx in tqdm(random_idx):
         input_tokens = process_data(data[idx]['instruction'], data[idx]['output'], encoder, is_backward=True)
