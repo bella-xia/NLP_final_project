@@ -177,7 +177,7 @@ def read_json(file_path):
 
 
 def load_datasets(is_core, encoder, is_backward, batch_size,
-                  max_length, device=torch.device("cpu"), train_val_ratios=[0.8, 0.1]):
+                  max_length, device=torch.device("cpu"), train_val_ratios=[0.8, 0.15]):
     
     PATH_TO_CORE_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/core_data.jsonl" 
     PATH_TO_FULL_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/full_data.jsonl"
@@ -189,18 +189,24 @@ def load_datasets(is_core, encoder, is_backward, batch_size,
     print(len(data))
     train_len, val_len = int(len(data) * train_val_ratios[0]), int(len(data) * train_val_ratios[1])
 
-    train_dataset = OpenGPT2Dataset(data[:train_len], device, encoder=encoder, is_backward=is_backward,
+    train_forward_dataset = OpenGPT2Dataset(data[:int(train_len/2)], device, encoder=encoder, is_backward=False,
                                     max_length=max_length, is_train=True)
-    val_dataset = OpenGPT2Dataset(data[train_len:train_len + val_len], device, encoder=encoder, is_backward=is_backward,
+    train_backward_dataset = OpenGPT2Dataset(data[int(train_len/2):train_len], device, encoder=encoder, is_backward=True,
                                     max_length=max_length, is_train=True)
-    test_dataset = OpenGPT2Dataset(data[train_len + val_len:], device, encoder=encoder, is_backward=is_backward,
+    val_forward_dataset = OpenGPT2Dataset(data[train_len:int((train_len + val_len)/2)], device, encoder=encoder, is_backward=False,
+                                    max_length=max_length, is_train=True)
+    val_backward_dataset = OpenGPT2Dataset(data[int((train_len + val_len)/2):train_len + val_len], device, encoder=encoder, is_backward=True,
+                                    max_length=max_length, is_train=True)
+    test_dataset = OpenGPT2Dataset(data[train_len + val_len:], device, encoder=encoder, is_backward=True,
                                     max_length=max_length, is_train=True)
     
-    train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_dataloader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
+    train_forward_dataloader = DataLoader(train_forward_dataset, batch_size=batch_size, shuffle=True)
+    train_backward_dataloader = DataLoader(train_backward_dataset, batch_size=batch_size, shuffle=True)
+    val_forward_dataloader = DataLoader(val_forward_dataset, batch_size=batch_size, shuffle=True)
+    val_backward_dataloader = DataLoader(val_backward_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
  
-    return train_dataloader, val_dataloader, test_dataloader
+    return train_forward_dataloader, train_backward_dataloader, val_forward_dataloader, val_backward_dataloader, test_dataloader
 
 def fine_tune_model():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

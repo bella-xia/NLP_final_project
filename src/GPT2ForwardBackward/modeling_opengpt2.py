@@ -767,7 +767,7 @@ class OpenGPT2Model(OpenGPT2PreTrainedModel):
             position_ids_raw = torch.arange(past_length, input_shape[-1] + past_length, dtype=torch.long, device=device)
             position_ids_raw = torch.flip(position_ids_raw, [0]) if position_reverse else position_ids_raw
             position_ids = position_ids_raw.unsqueeze(0).view(-1, input_shape[-1])
-            print(position_ids_raw.size(), special_position_ids.size())
+            print(position_ids_raw.size(), position_ids.size())
             print(position_ids)
 
         # Attention mask.
