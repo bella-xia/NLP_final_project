@@ -15,9 +15,10 @@ class CustomModelforSequenceGeneration(torch.nn.Module):
         self.device = device
         self.gpt2_model = model
 
-    def forward(self, input_ids, attention_mask, labels):
+    def forward(self, input_ids, attention_mask, labels, position_reverse):
         
-        output = self.gpt2_model(input_ids=input_ids, attention_mask=attention_mask, labels=labels)
+        output = self.gpt2_model(input_ids=input_ids, attention_mask=attention_mask, labels=labels,
+                                position_reverse=position_reverse)
 
         return output
     
@@ -86,7 +87,7 @@ def evaluate_model(model, encoder, dataset, is_backward, device):
     # compute and return metrics
     # return dev_accuracy.compute()
 
-def trainer(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_dataloader, test_dataloader, is_backward):
+def trainer(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_dataloader, test_dataloader, is_backward, position_reverse):
     """ Train a PyTorch Module
 
     :param torch.nn.Module mymodel: the model to be trained

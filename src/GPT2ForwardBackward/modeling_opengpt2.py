@@ -764,12 +764,11 @@ class OpenGPT2Model(OpenGPT2PreTrainedModel):
             past_length = past_key_values[0][0].size(-2)
         if position_ids is None:
             device = input_ids.device if input_ids is not None else inputs_embeds.device
-            position_ids = torch.arange(past_length, input_shape[-1] + past_length, dtype=torch.long, device=device)
-            special_position_ids = torch.flip(position_ids, [0]) if position_reverse else position_ids
-            position_ids = position_ids.unsqueeze(0).view(-1, input_shape[-1])
-            special_position_ids_reshaped = special_position_ids.unsqueeze(0).view(-1, input_shape[-1])
-            print(special_position_ids.size(), special_position_ids_reshaped.size())
-            # print(special_position_ids_reshaped)
+            position_ids_raw = torch.arange(past_length, input_shape[-1] + past_length, dtype=torch.long, device=device)
+            position_ids_raw = torch.flip(position_ids_raw, [0]) if position_reverse else position_ids_raw
+            position_ids = position_ids_raw.unsqueeze(0).view(-1, input_shape[-1])
+            print(position_ids_raw.size(), special_position_ids.size())
+            print(position_ids)
 
         # Attention mask.
         if attention_mask is not None:
