@@ -1,14 +1,14 @@
 import torch, json, random
 from torch.utils.data import Dataset, DataLoader
 from typing import Tuple
-from GPT2ForwardBackward.modeling_opengpt2 import OpenGPT2LMHeadModel
-from GPT2ForwardBackward.padded_encoder import Encoder
+# from GPT2ForwardBackward.modeling_opengpt2 import OpenGPT2LMHeadModel
+# from GPT2ForwardBackward.padded_encoder import Encoder
 from transformers import Trainer, TrainingArguments, GPT2Tokenizer
 
 
 def process_backward_data(io_text, instruction, encoder, max_length, is_train=False):
     encoded_io_text = torch.flip(torch.tensor(encoder.encode("[SEP]" + io_text)), [0])
-    instruction_text = torch.flip(torch.tensor(encoder.encode(instruction)), [0])
+    instruction_text = torch.flip(torch.tensor(encoder.encode(instruction.split("[SEP]")[0])), [0])
     io_encoded_length = len(encoded_io_text)
     instruction_encoded_length = len(instruction_text)
      # ...(padded / truncated)... x x x x (prompt) x x x x x x (ouput) ...(padded / truncated)...
@@ -110,6 +110,8 @@ def process_forward_data(io_text, instruction, encoder, max_length, is_train=Fal
 class OpenGPT2Dataset(Dataset):
     
     def __init__(self, dataset, device, encoder, is_backward, max_length, is_train, random_seed=42):
+        direction = "backward" if is_backward else "forward"
+        print(f"---> creating {direction} dataset")
         self.dataset = dataset
         self.dataset_length = len(dataset)
         self.device = device
@@ -176,10 +178,11 @@ def load_datasets(is_core, encoder, is_backward, batch_size,
     PATH_TO_CORE_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/core_data.jsonl" 
     PATH_TO_FULL_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/full_data.jsonl"
 
-    PATH_TO_DATASET = '/home/zxia15/NLP_final_project/data/alpaca-clean/no_input_alphaca_data_cleaned.json'
+    PATH_TO_DATASET = '/home/zxia15/NLP_final_project/data/alpaca-calibrated/forward_generation_full.json'
 
     # data_path = PATH_TO_CORE_DATASET if is_core else PATH_TO_FULL_DATASET
     data = read_json(PATH_TO_DATASET)
+    print(len(data))
     train_len, val_len = int(len(data) * train_val_ratios[0]), int(len(data) * train_val_ratios[1])
 
     train_dataset = OpenGPT2Dataset(data[:train_len], device, encoder=encoder, is_backward=is_backward,

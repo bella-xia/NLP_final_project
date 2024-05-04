@@ -180,12 +180,14 @@ def trainer(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_data
 
             if index == 0:
                 if is_backward:
+                    print(f"---> evaluating backward train instance")
                     # non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
                     input_text = encoder.decode(torch.flip(input_ids[0], [0]))
                     pred_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
                     mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
                     expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
                 else:
+                    print(f"---> evaluating forward train instance")
                     # non_instru_length = attention_mask.size()[0] - torch.sum(attention_mask)
                     input_text = encoder.decode(input_ids[0])
                     pred_text = encoder.decode(torch.argmax(predictions['logits'][0], dim=1))
@@ -254,12 +256,14 @@ def trainer(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_data
 
             if index == 0:
                 if is_backward:
+                    print(f"---> evaluating backward validation instance")
                     # non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
                     input_text = encoder.decode(torch.flip(input_ids[0], [0]))
                     pred_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
                     mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
                     expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
                 else:
+                    print(f"---> evaluating forward validation instance")
                     # non_instru_length = attention_mask.size()[0] - torch.sum(attention_mask)
                     input_text = encoder.decode(input_ids[0])
                     pred_text = encoder.decode(torch.argmax(predictions['logits'][0], dim=1))
@@ -292,7 +296,7 @@ def trainer(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_data
         if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
             print(f"save model for epoch {epoch + 1}!")
             model = mymodel.get_model()
-            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_forward_alcapa")
+            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_calibrated_alcapa")
             prev_loss = avg_val_loss
     
     mymodel.eval()
@@ -309,12 +313,14 @@ def trainer(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_data
 
         if index == 0:
             if is_backward:
+                print(f"---> evaluating backward test instance")
                 # non_input_length = attention_mask.size()[0] - torch.sum(attention_mask)
                 input_text = encoder.decode(torch.flip(input_ids[0], [0]))
                 pred_text = encoder.decode(torch.flip(torch.argmax(predictions['logits'][0], dim=1), [0]))
                 mod_labels = torch.where(labels[0] == -100, torch.tensor(0), labels[0])
                 expected_pred = encoder.decode(torch.flip(mod_labels, [0]))
             else:
+                print(f"---> evaluating forward test instance")
                 # non_instru_length = attention_mask.size()[0] - torch.sum(attention_mask)
                 input_text = encoder.decode(input_ids[0])
                 pred_text = encoder.decode(torch.argmax(predictions['logits'][0], dim=1))
@@ -335,10 +341,10 @@ def trainer(mymodel, num_epochs, device, lr, encoder, train_dataloader, val_data
     print(f" - Dead loss metrics: {test_loss}")
     print(f" - Dead perplexity metrics: {test_ppl}")
 
-    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca per Epoch Forward', False)
-    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Epoch Forward', True)
-    plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch Forward', False, False)
-    plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Batch Forward', True, False)
+    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca per Epoch Backward', False)
+    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Epoch Backward', True)
+    plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch Backward', False, False)
+    plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Batch Backward', True, False)
 
 def plot(train_list, valid_list, name, is_ppl, same_length=True):
     
@@ -381,7 +387,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--small_subset",action='store_true', default=False)
     parser.add_argument("--is_backward",action='store_true', default=False)
-    parser.add_argument("--num_epochs", type=int, default=15)
+    parser.add_argument("--num_epochs", type=int, default=8)
     parser.add_argument("--lr", type=float, default=1e-6)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--max_length", type=int, default=100)
