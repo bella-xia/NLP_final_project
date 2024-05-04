@@ -1,14 +1,14 @@
 import torch, json, random
 from torch.utils.data import Dataset, DataLoader
 from typing import Tuple
-# from GPT2ForwardBackward.modeling_opengpt2 import OpenGPT2LMHeadModel
-# from GPT2ForwardBackward.padded_encoder import Encoder
+from GPT2ForwardBackward.modeling_opengpt2 import OpenGPT2LMHeadModel
+from GPT2ForwardBackward.padded_encoder import Encoder
 from transformers import Trainer, TrainingArguments, GPT2Tokenizer
 
 
 def process_backward_data(io_text, instruction, encoder, max_length, is_train=False):
     encoded_io_text = torch.flip(torch.tensor(encoder.encode("[SEP]" + io_text)), [0])
-    instruction_text = torch.flip(torch.tensor(encoder.encode(instruction.split("[SEP]")[0])), [0])
+    instruction_text = torch.flip(torch.tensor(encoder.encode(instruction)), [0])
     io_encoded_length = len(encoded_io_text)
     instruction_encoded_length = len(instruction_text)
      # ...(padded / truncated)... x x x x (prompt) x x x x x x (ouput) ...(padded / truncated)...
@@ -17,10 +17,10 @@ def process_backward_data(io_text, instruction, encoder, max_length, is_train=Fa
     if (io_encoded_length + instruction_encoded_length > max_length):
         # print("truncating!")
         truncated_length = io_encoded_length + instruction_encoded_length - max_length
-        if (instruction_encoded_length > io_encoded_length * 2):
+        if (instruction_encoded_length > io_encoded_length * 2 and max_length > io_encoded_length * 2):
             io_truncated_length = 0
             instruction_truncated_length = truncated_length
-        elif (io_encoded_length > instruction_encoded_length * 2):
+        elif (io_encoded_length > instruction_encoded_length * 2 and max_length > instruction_encoded_length * 2):
             io_truncated_length = truncated_length
             instruction_truncated_length = 0
         else:
@@ -34,7 +34,10 @@ def process_backward_data(io_text, instruction, encoder, max_length, is_train=Fa
         else:
             full_encoded_text = torch.cat([encoded_io_text[io_truncated_length:], torch.zeros(instruction_encoded_length - instruction_truncated_length)])
             encoded_attention_mask = torch.cat([torch.ones(io_encoded_length - io_truncated_length), torch.zeros(instruction_encoded_length - instruction_truncated_length)])
-        instruction_encoded_text = torch.cat([torch.ones(io_encoded_length - io_truncated_length - 1) * -100, instruction_text[:instruction_encoded_length-instruction_truncated_length + 1]])
+        if (instruction_truncated_length != 0):
+            instruction_encoded_text = torch.cat([torch.ones(io_encoded_length - io_truncated_length - 1) * -100, instruction_text[:instruction_encoded_length - instruction_truncated_length + 1]])
+        else: 
+            instruction_encoded_text = torch.cat([torch.ones(io_encoded_length - io_truncated_length - 1) * -100, instruction_text[:instruction_encoded_length - instruction_truncated_length], torch.zeros(1)])
     else:
         # print("padding!")
         padded_length = max_length - io_encoded_length - instruction_encoded_length
@@ -157,6 +160,7 @@ def load_models(device=torch.device("cpu"), is_backward=False) -> Tuple[torch.nn
     # model_forward = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FORWARD).to(device)
     model = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_BACKWARD).to(device) if is_backward else OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FORWARD).to(device)
     encoder = Encoder()
+    encoder.add_special_tokens(["[SEP]"])
     return model, encoder
 
 def read_jsonl(file_path):
@@ -178,7 +182,7 @@ def load_datasets(is_core, encoder, is_backward, batch_size,
     PATH_TO_CORE_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/core_data.jsonl" 
     PATH_TO_FULL_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/full_data.jsonl"
 
-    PATH_TO_DATASET = '/home/zxia15/NLP_final_project/data/alpaca-calibrated/forward_generation_full.json'
+    PATH_TO_DATASET = '/home/zxia15/NLP_final_project/data/alpaca-clean/no_input_alphaca_data_cleaned.json'
 
     # data_path = PATH_TO_CORE_DATASET if is_core else PATH_TO_FULL_DATASET
     data = read_json(PATH_TO_DATASET)
@@ -187,9 +191,9 @@ def load_datasets(is_core, encoder, is_backward, batch_size,
 
     train_dataset = OpenGPT2Dataset(data[:train_len], device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=True)
-    val_dataset = OpenGPT2Dataset(data[train_len:train_len+val_len], device, encoder=encoder, is_backward=is_backward,
+    val_dataset = OpenGPT2Dataset(data[train_len:train_len + val_len], device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=True)
-    test_dataset = OpenGPT2Dataset(data[train_len+val_len:], device, encoder=encoder, is_backward=is_backward,
+    test_dataset = OpenGPT2Dataset(data[train_len + val_len:], device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=True)
     
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)

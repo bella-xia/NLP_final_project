@@ -23,6 +23,9 @@ class Encoder():
     def get_pad_token(self):
         return self.encoder.pad_token_id
     
+    def add_special_tokens(self, special_token_list):
+        self.encoder.add_special_tokens({'additional_special_tokens':special_token_list})
+    
     def decode(self, tokens):
         tokens_shifted = [t - 1 for t in tokens if t !=0 ]
         if len(tokens_shifted) != len(tokens):

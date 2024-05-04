@@ -56,7 +56,7 @@ def get_generation(input_tokens, expected_output, model, encoder, is_backward=Fa
         for k in top_k:
             pred= model_generate(model, torch.unsqueeze(input_tokens, dim=0).to(device), temperature=temp, do_sample=True, top_k=k)
             # pred_tokens = pred.tolist()[0][::-1] if is_backward else pred.tolist()[0]
-            preds_dict[f'temp {temp} top_k {k}'] = encoder.decode(torch.flip(pred[0], [0])) else encoder.decode(pred[0])
+            preds_dict[f'temp {temp} top_k {k}'] = encoder.decode(torch.flip(pred[0], [0])) if is_backward else encoder.decode(pred[0])
             # print(f"model prediction with temperature {temp} top_k {k} multinomial sampling: {encoder.decode(pred_tokens)}")
     return preds_dict
 
@@ -74,7 +74,7 @@ def get_generation_with_temp_one_and_half_k_thirty(input_tokens, model, encoder)
 def process_data(instruction_text, output_text, encoder, is_backward=False, max_length=100):
     if is_backward:
         encoded_instruction_text = torch.flip(torch.tensor(encoder.encode('[SEP]' + output_text)), [0])
-        encoded_output_text = torch.flip(torch.tensor(encoder.encode(instruction_text.split('[SEP]')[0])), [0])
+        encoded_output_text = torch.flip(torch.tensor(encoder.encode(instruction_text)), [0])
     else:
         encoded_instruction_text = torch.tensor(encoder.encode(instruction_text + '[SEP]'))
         encoded_output_text = torch.tensor(encoder.encode(output_text))
@@ -103,14 +103,15 @@ def process_data(instruction_text, output_text, encoder, is_backward=False, max_
 
 
 if __name__ == "__main__":
-    PATH_TO_MODEL = "/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_calibrated_alcapa"
+    PATH_TO_MODEL = "/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa"
     # PATH_TO_MODEL = "/home/zxia15/NLP_final_project/params/opengpt2_pytorch_backward"
-    PATH_TO_DATASET = "/home/zxia15/NLP_final_project/data/alpaca-calibrated/forward_generation_full.json"
+    PATH_TO_DATASET = "/home/zxia15/NLP_final_project/data/alpaca-clean/no_input_alphaca_data_cleaned.json"
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # model_forward = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FINE_TUNED_FORWARD).to(device)
     model_finetuned_backward = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_MODEL).to(device)
     encoder = Encoder()
+    encoder.add_special_tokens(["[SEP]"])
 
     data = read_json(PATH_TO_DATASET)
     print(len(data))
@@ -118,8 +119,8 @@ if __name__ == "__main__":
     START_POINT = int(len(data) * 0.8)
     END_POINT = int(len(data))
 
-    random_idx = [random.randint(0, START_POINT) for _ in range(2)]
-    random_idx.extend([random.randint(START_POINT , END_POINT) for _ in range(2)])
+    random_idx = [random.randint(0, START_POINT) for _ in range(10)]
+    random_idx.extend([random.randint(START_POINT , END_POINT) for _ in range(10)])
 
     print(random_idx)
     output_arr = []
@@ -128,7 +129,7 @@ if __name__ == "__main__":
         output_dict = get_generation(input_tokens, data[idx]['instruction'], model_finetuned_backward, encoder, is_backward=True)
         output_arr.append(output_dict)
     json_string = json.dumps(output_arr, indent=4)
-    with open(f"backawrd_generation_samples.json", "w") as json_file:
+    with open(f"backawrd_generation_samples_uncalibrated.json", "w") as json_file:
         json_file.write(json_string)
 
     '''
