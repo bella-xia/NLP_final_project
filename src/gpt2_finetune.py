@@ -189,6 +189,8 @@ def load_datasets(encoder, is_backward, batch_size,
     data = read_json(PATH_TO_DATASET)
     print(len(data))
     train_len, val_len = int(len(data) * train_val_ratios[0]), int(len(data) * train_val_ratios[1])
+    # train_len = 100
+    # val_len = 20
 
     train_dataset = OpenGPT2Dataset(data[int(train_len/2):train_len], 
                                     device, encoder=encoder, is_backward=is_backward,

@@ -1,315 +1,67 @@
-Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:20<00:20, 20.88s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:24<00:00, 10.77s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:24<00:00, 12.29s/it]
+Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:00<00:00,  1.61it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.27it/s]Loading checkpoint shards: 100%|██████████| 2/2 [00:01<00:00,  1.31it/s]
 32603
-[9645, 4131, 9647, 7335, 24883, 18744, 19400, 888, 22077, 21657, 31704, 29164, 32435, 30731, 28088, 29256, 31652, 30731, 32353, 26993]
-  0%|          | 0/20 [00:00<?, ?it/s]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-  5%|▌         | 1/20 [00:44<14:08, 44.67s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 10%|█         | 2/20 [01:25<12:43, 42.42s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 15%|█▌        | 3/20 [02:06<11:47, 41.63s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 20%|██        | 4/20 [02:47<11:03, 41.48s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 25%|██▌       | 5/20 [03:28<10:22, 41.50s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 30%|███       | 6/20 [03:59<08:48, 37.74s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 35%|███▌      | 7/20 [04:38<08:17, 38.29s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 40%|████      | 8/20 [05:19<07:50, 39.17s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 45%|████▌     | 9/20 [05:50<06:40, 36.45s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 50%|█████     | 10/20 [06:32<06:21, 38.13s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 55%|█████▌    | 11/20 [07:13<05:50, 38.94s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 60%|██████    | 12/20 [07:44<04:52, 36.60s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 65%|██████▌   | 13/20 [08:24<04:23, 37.60s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 70%|███████   | 14/20 [08:58<03:39, 36.63s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 75%|███████▌  | 15/20 [09:39<03:09, 37.94s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 80%|████████  | 16/20 [10:12<02:25, 36.39s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 85%|████████▌ | 17/20 [10:53<01:53, 37.68s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 90%|█████████ | 18/20 [11:27<01:13, 36.68s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
- 95%|█████████▌| 19/20 [12:00<00:35, 35.64s/it]WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-WARNING: padding removed from sequence during decoding
-100%|██████████| 20/20 [12:40<00:00, 36.98s/it]100%|██████████| 20/20 [12:40<00:00, 38.04s/it]
+  0%|          | 0/2 [00:00<?, ?it/s]torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+torch.Size([24]) torch.Size([1, 24])
+torch.Size([25]) torch.Size([1, 25])
+ 50%|█████     | 1/2 [00:02<00:02,  2.40s/it]torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+torch.Size([85]) torch.Size([1, 85])
+torch.Size([86]) torch.Size([1, 86])
+100%|██████████| 2/2 [00:03<00:00,  1.68s/it]100%|██████████| 2/2 [00:03<00:00,  1.79s/it]

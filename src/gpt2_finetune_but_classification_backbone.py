@@ -142,9 +142,12 @@ def trainer(mymodel, num_epochs, device, lr, encoder,
         if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
             print(f"save model for epoch {epoch + 1}!")
             model = mymodel.get_model()
-            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_alcapa")
+            if is_backward:
+                model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa")
+            else:
+                # model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_alcapa")
+                print("wrong column")
             prev_loss = avg_val_loss
-    
 
     mymodel.eval()
     print("\n====> Testing\n")
@@ -255,7 +258,7 @@ if __name__ == "__main__":
     parser.add_argument("--small_subset",action='store_true', default=False)
     parser.add_argument("--is_backward",action='store_true', default=False)
     parser.add_argument("--position_reverse", action='store_true', default=False)
-    parser.add_argument("--num_epochs", type=int, default=5)
+    parser.add_argument("--num_epochs", type=int, default=15)
     parser.add_argument("--lr", type=float, default=1e-6)
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--max_length", type=int, default=100)

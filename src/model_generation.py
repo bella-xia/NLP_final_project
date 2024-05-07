@@ -6,7 +6,7 @@ from GPT2ForwardBackward.padded_encoder import Encoder
 from gpt2_finetune import read_json
 
 def model_generate(
-        model, idx, max_new_tokens=100, temperature=1.0, do_sample=False, top_k=None
+        model, idx, max_new_tokens=100, temperature=1.0, do_sample=False, top_k=None, position_reverse=False
     ):
         """
         Take a conditioning sequence of indices idx (LongTensor of shape (b,t)) and complete
@@ -14,14 +14,14 @@ def model_generate(
         Most likely you'll want to make sure to be in model.eval() mode of operation for this.
         """
         # predictable_tokens = max_new_tokens - idx.size()[1]
-        predictable_tokens = 2
+        predictable_tokens = 60
         model.eval()
         with torch.no_grad():
             for _ in range(predictable_tokens):
                 # if the sequence context is growing too long we must crop it at block_size
                 idx_cond = idx
                 # forward the model to get the logits for the index in the sequence
-                logits = model(idx_cond)['logits']
+                logits = model(idx_cond, position_reverse=position_reverse)['logits']
                 # pluck the logits at the final step and scale by desired temperature
                 logits = logits[:, -1, :] / temperature
                 # optionally crop the logits to only the top k options
@@ -41,7 +41,7 @@ def model_generate(
 
         return idx
 
-def get_generation(input_tokens, expected_output, model, encoder, is_backward=False):
+def get_generation(input_tokens, expected_output, model, encoder, is_backward=False, position_reverse=False):
     # input_tokens = encoder.encode(input_text) if is_forward else encoder.encode(input_text)[::-1]
     temp_choice = [0.5, 1.0, 1.5]
     top_k = [None, 5, 15, 30, 100]
@@ -54,7 +54,7 @@ def get_generation(input_tokens, expected_output, model, encoder, is_backward=Fa
     # print(f"model prediction with default first choice:\n {decoded_pred}\n", )
     for temp in temp_choice:
         for k in top_k:
-            pred= model_generate(model, torch.unsqueeze(input_tokens, dim=0).to(device), temperature=temp, do_sample=True, top_k=k)
+            pred= model_generate(model, torch.unsqueeze(input_tokens, dim=0).to(device), temperature=temp, do_sample=True, top_k=k, position_reverse=position_reverse)
             # pred_tokens = pred.tolist()[0][::-1] if is_backward else pred.tolist()[0]
             preds_dict[f'temp {temp} top_k {k}'] = encoder.decode(torch.flip(pred[0], [0])) if is_backward else encoder.decode(pred[0])
             # print(f"model prediction with temperature {temp} top_k {k} multinomial sampling: {encoder.decode(pred_tokens)}")
@@ -119,17 +119,17 @@ if __name__ == "__main__":
     START_POINT = int(len(data) * 0.8)
     END_POINT = int(len(data))
 
-    random_idx = [random.randint(0, START_POINT) for _ in range(2)]
-    # random_idx.extend([random.randint(START_POINT , END_POINT) for _ in range(2)])
+    random_idx = [random.randint(0, START_POINT) for _ in range(10)]
+    random_idx.extend([random.randint(START_POINT , END_POINT) for _ in range(10)])
 
     # print(random_idx)
     output_arr = []
     for idx in tqdm(random_idx):
         input_tokens = process_data(data[idx]['instruction'], data[idx]['output'], encoder, is_backward=True)
-        output_dict = get_generation(input_tokens, data[idx]['instruction'], model_finetuned_backward, encoder, is_backward=True)
+        output_dict = get_generation(input_tokens, data[idx]['instruction'], model_finetuned_backward, encoder, is_backward=True, position_reverse=True)
         output_arr.append(output_dict)
     json_string = json.dumps(output_arr, indent=4)
-    with open(f"backawrd_generation_samples_uncalibrated.json", "w") as json_file:
+    with open(f"backward_generation_samples_backward_pos.json", "w") as json_file:
         json_file.write(json_string)
 
     '''
