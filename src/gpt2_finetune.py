@@ -193,17 +193,17 @@ def load_datasets(is_core, encoder, is_backward, batch_size,
                                     max_length=max_length, is_train=True)
     train_backward_dataset = OpenGPT2Dataset(data[int(train_len/2):train_len], device, encoder=encoder, is_backward=True,
                                     max_length=max_length, is_train=True)
-    val_forward_dataset = OpenGPT2Dataset(data[train_len:int((train_len + val_len)/2)], device, encoder=encoder, is_backward=False,
+    val_forward_dataset = OpenGPT2Dataset(data[train_len:train_len + int(val_len/2)], device, encoder=encoder, is_backward=False,
                                     max_length=max_length, is_train=True)
-    val_backward_dataset = OpenGPT2Dataset(data[int((train_len + val_len)/2):train_len + val_len], device, encoder=encoder, is_backward=True,
+    val_backward_dataset = OpenGPT2Dataset(data[train_len + int(val_len/2):train_len + val_len], device, encoder=encoder, is_backward=True,
                                     max_length=max_length, is_train=True)
     test_dataset = OpenGPT2Dataset(data[train_len + val_len:], device, encoder=encoder, is_backward=True,
                                     max_length=max_length, is_train=True)
-    
+    print(len(train_forward_dataset), len(train_backward_dataset), len(val_forward_dataset), len(val_backward_dataset), len(test_dataset))
     train_forward_dataloader = DataLoader(train_forward_dataset, batch_size=batch_size, shuffle=True)
     train_backward_dataloader = DataLoader(train_backward_dataset, batch_size=batch_size, shuffle=True)
-    val_forward_dataloader = DataLoader(val_forward_dataset, batch_size=batch_size, shuffle=True)
-    val_backward_dataloader = DataLoader(val_backward_dataset, batch_size=batch_size, shuffle=True)
+    val_forward_dataloader = DataLoader(val_forward_dataset, batch_size=batch_size, shuffle=False)
+    val_backward_dataloader = DataLoader(val_backward_dataset, batch_size=batch_size, shuffle=False)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
  
     return train_forward_dataloader, train_backward_dataloader, val_forward_dataloader, val_backward_dataloader, test_dataloader
