@@ -92,14 +92,12 @@ def evaluate_model(model, encoder, dataset, is_backward, device):
     # compute and return metrics
     # return dev_accuracy.compute()
 
-def trainer(mymodel, num_epochs, device, lr, encoder, train_forward_dataloader, train_backward_dataloader, val_forward_dataloader, val_backward_dataloader, test_dataloader, is_backward, position_reverse):
+def trainer(mymodel, num_epochs, device, lr, encoder, 
+            train_dataloader, val_dataloader, test_dataloader, is_backward, position_reverse):
     
     weight_decay = 0.01
     no_decay = ['bias', 'LayerNorm.weight']
 
-    # loss_fn = torch.nn.CrossEntropyLoss()
-    
-    epoch_list = []
     train_loss_list = []
     train_ppl_list = []
     val_loss_list = []
@@ -110,91 +108,58 @@ def trainer(mymodel, num_epochs, device, lr, encoder, train_forward_dataloader, 
     all_val_ppl_list = []
 
     prev_loss = 100000
-
-    with torch.cuda.device(0):
-        mymodel.to(device)
-        optimizer_grouped_parameters = [
-        {'params': [p for n, p in mymodel.named_parameters() if not any(nd in n for nd in no_decay)],'weight_decay': weight_decay},
-        {'params': [p for n, p in mymodel.named_parameters() if any(nd in n for nd in no_decay)],'weight_decay': 0.0}
-        ]
-        forward_optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=lr)
-        forward_lr_scheduler = get_scheduler(
-            "linear",
-            optimizer=forward_optimizer,
-            num_warmup_steps=50,
-            num_training_steps=(len(train_forward_dataloader) + len(train_backward_dataloader))* num_epochs
-            )
-        for epoch in range(num_epochs):
-
-            epoch_start_time = time.time()
-
-            mymodel.train()
-            trainer_helper(mymodel, train_forward_dataloader, forward_optimizer, forward_lr_scheduler,
-                        all_train_loss_list, all_train_ppl_list, train_loss_list, train_ppl_list,
-                        epoch, is_train=True, is_backward=False, position_reverse=False)
-        
-            mymodel.eval()
-            avg_val_loss = trainer_helper(mymodel, val_forward_dataloader, None, None,
-                        all_val_loss_list, all_val_ppl_list, val_loss_list, val_ppl_list,
-                        epoch, is_train=False, is_backward=False, position_reverse=False)
-
-            epoch_end_time = time.time()
-            print(f"Epoch {epoch + 1} took {epoch_end_time - epoch_start_time} seconds")
-
-            if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
-                print(f"save model for epoch {epoch + 1}!")
-                model = mymodel.get_model()
-                model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa")
-                prev_loss = avg_val_loss
     
-    torch.cuda.empty_cache()
-    with torch.cuda.device(0):
-        mymodel.change_model("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa")
-        mymodel.to(device)
+    mymodel.to(device)
+    optimizer_grouped_parameters = [
+    {'params': [p for n, p in mymodel.named_parameters() if not any(nd in n for nd in no_decay)],'weight_decay': weight_decay},
+    {'params': [p for n, p in mymodel.named_parameters() if any(nd in n for nd in no_decay)],'weight_decay': 0.0}
+    ]
+    optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=lr)
+    lr_scheduler = get_scheduler(
+        "linear", optimizer=optimizer,
+        num_warmup_steps=50, num_training_steps=len(train_dataloader) * num_epochs)
+    
 
-        backward_optimizer = torch.optim.AdamW(optimizer_grouped_parameters, lr=lr)
+    for epoch in range(num_epochs):
+
+        epoch_start_time = time.time()
+
+        mymodel.train()
+        trainer_helper(mymodel, encoder, train_dataloader, optimizer, lr_scheduler,
+                    all_train_loss_list, all_train_ppl_list, train_loss_list, train_ppl_list,
+                    epoch, is_train=True, is_backward=is_backward, 
+                    position_reverse=position_reverse if is_backward else False)
         
-        backward_lr_scheduler = get_scheduler("linear",
-                                optimizer=backward_optimizer, num_warmup_steps=50,
-                                num_training_steps=len(train_backward_dataloader)* num_epochs)
-
-        for epoch in range(num_epochs):
-
-            epoch_start_time = time.time()
-            mymodel.train()
-            trainer_helper(mymodel, train_backward_dataloader, backward_optimizer, backward_lr_scheduler,
-                        all_train_loss_list, all_train_ppl_list, train_loss_list, train_ppl_list,
-                        epoch, is_train=True, is_backward=True, position_reverse=position_reverse)
-        
-            mymodel.eval()
-            avg_val_loss = trainer_helper(mymodel, val_backward_dataloader, None, None,
-                        all_val_loss_list, all_val_ppl_list, val_loss_list, val_ppl_list,
-                        epoch, is_train=False, is_backward=True, position_reverse=position_reverse)
-
-            epoch_end_time = time.time()
-            print(f"Epoch {epoch + 1} took {epoch_end_time - epoch_start_time} seconds")
-
-            if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
-                print(f"save model for epoch {epoch + 1}!")
-                model = mymodel.get_model()
-                model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa")
-                prev_loss = avg_val_loss
-
-    torch.cuda.empty_cache()
-    with torch.cuda.device(0):
-        mymodel.to(device)
         mymodel.eval()
-        trainer_helper(mymodel, test_dataloader, None, None, [], [], [], [], 10082, 
-        is_train=False, is_backward=True, position_reverse=position_reverse)
+        avg_val_loss = trainer_helper(mymodel, encoder, val_dataloader, None, None,
+                    all_val_loss_list, all_val_ppl_list, val_loss_list, val_ppl_list,
+                    epoch, is_train=False, is_backward=is_backward, 
+                    position_reverse=position_reverse if is_backward else False)
+
+        epoch_end_time = time.time()
+        print(f"Epoch {epoch + 1} took {epoch_end_time - epoch_start_time} seconds")
+
+        if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
+            print(f"save model for epoch {epoch + 1}!")
+            model = mymodel.get_model()
+            model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_alcapa")
+            prev_loss = avg_val_loss
+    
+
+    mymodel.eval()
+    print("\n====> Testing\n")
+    trainer_helper(mymodel, encoder, test_dataloader, None, None, [], [], [], [], 10082, 
+                   is_train=False, is_backward=is_backward, 
+                    position_reverse=position_reverse if is_backward else False)
     
     torch.cuda.empty_cache()
 
-    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca per Epoch For And Back', False)
-    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Epoch For And Back', True)
-    plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch For And Back', False, False)
-    plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perpexity Graph Alpaca per Batch For And Back', True, False)
+    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca per Epoch Backward' if is_backward else 'Train vs Validation Loss Graph Alpaca per Epoch Forward', False)
+    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perplexity Graph Alpaca per Epoch Backward' if is_backward else 'Train vs Validation Perplexity Graph Alpaca per Epoch Forward', True)
+    plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch Backward' if is_backward else 'Train vs Validation Loss Graph Alpaca per Batch Forward', False, False)
+    plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perplexity Graph Alpaca per Batch Backward' if is_backward else 'Train vs Validation Perplexity Graph Alpaca per Batch Forward', True, False)
 
-def trainer_helper(mymodel, dataloader, optimizer, lr_scheduler, all_loss_list, all_ppl_list,
+def trainer_helper(mymodel, encoder, dataloader, optimizer, lr_scheduler, all_loss_list, all_ppl_list,
                    loss_list, ppl_list, epoch, is_train, is_backward, position_reverse):
 
     cur_epoch_ppl = []
@@ -267,22 +232,22 @@ def plot(train_list, valid_list, name, is_ppl, same_length=True):
     plt.savefig(f'{name}.png')
 
 
-def pre_process(device, small_subset, is_backward, max_length, batch_size):
+def pre_process(device, is_backward, max_length, batch_size):
 
     # from Hugging Face (transformers), read their documentation to do this.
     print("Loading the model ...")
-    model, encoder = load_models(device=device, is_backward=False)
+    model, encoder = load_models(device=device, is_backward=is_backward)
     pretrained_model = CustomModelforSequenceGeneration(model=model, device=device)
 
     print(" >>>>>>>> Initializing the data loaders ... ")
-    train_forward_dataloader, train_backward_dataloader, val_forward_dataloader, val_backward_dataloader, test_dataloader = load_datasets(is_core=small_subset, encoder=encoder, 
+    train_dataloader, val_dataloader, test_dataloader = load_datasets(encoder=encoder, 
                                                                       is_backward=is_backward, batch_size=batch_size,
-                                                                        max_length=max_length, device=device)
+                                                                      max_length=max_length, device=device)
 
 
     print("Moving model to device ..." + str(device))
     pretrained_model.to(device)
-    return pretrained_model, encoder, train_forward_dataloader, train_backward_dataloader, val_forward_dataloader, val_backward_dataloader, test_dataloader
+    return pretrained_model, encoder, train_dataloader, val_dataloader, test_dataloader
 
 # the entry point of the program
 if __name__ == "__main__":
@@ -304,13 +269,13 @@ if __name__ == "__main__":
     # global prefix_length
     # prefix_length = args.prefix_length
     #load the data and models
-    pretrained_model, encoder, train_forward_dataloader, train_backward_dataloader, val_forward_dataloader, val_backward_dataloader, test_dataloader = pre_process(
-        device, args.small_subset, args.is_backward,
-        args.max_length, args.batch_size)
+    pretrained_model, encoder, train_dataloader, val_dataloader, test_dataloader = pre_process(device, args.is_backward,
+                                                                                               args.max_length, args.batch_size)
     print(" >>>>>>>>  Starting training ... ")
     trainer(pretrained_model, args.num_epochs,
           device, args.lr, encoder, 
-          train_forward_dataloader, train_backward_dataloader, val_forward_dataloader, val_backward_dataloader, test_dataloader, args.is_backward, args.position_reverse)
+          train_dataloader, val_dataloader, 
+          test_dataloader, args.is_backward, args.position_reverse)
     
     # print the GPU memory usage just to make sure things are alright
     print_gpu_memory()
