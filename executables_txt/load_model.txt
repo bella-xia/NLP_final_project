@@ -1,17 +1,0 @@
-Loading checkpoint shards:   0%|          | 0/2 [00:00<?, ?it/s]Loading checkpoint shards:  50%|█████     | 1/2 [00:12<00:12, 12.28s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:14<00:00,  6.64s/it]Loading checkpoint shards: 100%|██████████| 2/2 [00:14<00:00,  7.49s/it]
-model prediction:   he is trying to figure out what to do with the leftovers.
-
-"We're going to take the leftovers and make a meal out of it," he said.
-
-Fernando Acevedo, 26, who works at the restaurant, said he is trying to figure out what to do with the leftovers.
-
-"We're going to take the leftovers and make a meal out of it," he said.
-
-Fernando Acevedo, 26, who works at the restaurant, said he is trying to figure out what to do with the leftovers.
-
-"We're going to take the leftovers and make a meal out of it," he said.
-
-Fernando Acevedo, 26, who works at the restaurant, said he is trying to figure out what to do with the leftovers.�
-"We're going to take the leftovers and make a meal out of it," he said.
-
-It's hard to say how long the leftovers will keep.

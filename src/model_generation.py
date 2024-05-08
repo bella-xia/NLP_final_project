@@ -103,7 +103,7 @@ def process_data(instruction_text, output_text, encoder, is_backward=False, max_
 
 
 if __name__ == "__main__":
-    PATH_TO_MODEL = "/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa"
+    PATH_TO_MODEL = "/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa wo position reverse"
     # PATH_TO_MODEL = "/home/zxia15/NLP_final_project/params/opengpt2_pytorch_backward"
     PATH_TO_DATASET = "/home/zxia15/NLP_final_project/data/alpaca-clean/no_input_alphaca_data_cleaned.json"
 
@@ -119,33 +119,17 @@ if __name__ == "__main__":
     START_POINT = int(len(data) * 0.8)
     END_POINT = int(len(data))
 
+    random.seed(42)
+
     random_idx = [random.randint(0, START_POINT) for _ in range(10)]
-    random_idx.extend([random.randint(START_POINT , END_POINT) for _ in range(10)])
+    random_idx.extend([random.randint(START_POINT , END_POINT) for _ in range(20)])
 
     # print(random_idx)
     output_arr = []
     for idx in tqdm(random_idx):
         input_tokens = process_data(data[idx]['instruction'], data[idx]['output'], encoder, is_backward=True)
-        output_dict = get_generation(input_tokens, data[idx]['instruction'], model_finetuned_backward, encoder, is_backward=True, position_reverse=True)
+        output_dict = get_generation(input_tokens, data[idx]['instruction'], model_finetuned_backward, encoder, is_backward=True, position_reverse=False)
         output_arr.append(output_dict)
     json_string = json.dumps(output_arr, indent=4)
-    with open(f"backward_generation_samples_backward_pos.json", "w") as json_file:
+    with open(f"/home/zxia15/NLP_final_project/generated_json/backward_generation_samples_wo_pos_reverse_02.json", "w") as json_file:
         json_file.write(json_string)
-
-    '''
-    TOTAL_ROUND = 9
-    PER_FILE = 960
-    START_POINT = PER_FILE * TOTAL_ROUND * 3
-
-    for round in tqdm(range(7)):
-        output_arr = []
-        for idx in tqdm(range(PER_FILE) if round != 6 else range(len(data) -START_POINT - 6 * PER_FILE)):
-            input_tokens = process_data(data[START_POINT + idx + round * PER_FILE]['instruction'], data[START_POINT + idx + round * PER_FILE]['output'], encoder)
-            output_dict = get_generation_with_temp_one_and_half_k_thirty(input_tokens, model_finetuned_forward, encoder)
-            output_arr.append(output_dict)
-        json_string = json.dumps(output_arr, indent=4)
-
-        # Write the JSON string to a file
-        with open(f"forward_generation_round_{round +1}.json", "w") as json_file:
-            json_file.write(json_string)
-    '''

@@ -146,7 +146,7 @@ def trainer(mymodel, num_epochs, device, lr, encoder,
                 model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa")
             else:
                 # model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_alcapa")
-                print("wrong column")
+                raise Exception("wrong column")
             prev_loss = avg_val_loss
 
     mymodel.eval()
