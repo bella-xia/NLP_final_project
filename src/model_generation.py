@@ -103,7 +103,7 @@ def process_data(instruction_text, output_text, encoder, is_backward=False, max_
 
 
 if __name__ == "__main__":
-    PATH_TO_MODEL = "/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa wo position reverse"
+    PATH_TO_MODEL = "/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_b2b_alcapa_wo_reverse"
     # PATH_TO_MODEL = "/home/zxia15/NLP_final_project/params/opengpt2_pytorch_backward"
     PATH_TO_DATASET = "/home/zxia15/NLP_final_project/data/alpaca-clean/no_input_alphaca_data_cleaned.json"
 
@@ -131,5 +131,5 @@ if __name__ == "__main__":
         output_dict = get_generation(input_tokens, data[idx]['instruction'], model_finetuned_backward, encoder, is_backward=True, position_reverse=False)
         output_arr.append(output_dict)
     json_string = json.dumps(output_arr, indent=4)
-    with open(f"/home/zxia15/NLP_final_project/generated_json/backward_generation_samples_wo_pos_reverse_02.json", "w") as json_file:
+    with open(f"/home/zxia15/NLP_final_project/final_json_eval/b2b_generation_samples_wo_pos_reverse.json", "w") as json_file:
         json_file.write(json_string)

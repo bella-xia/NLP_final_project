@@ -156,7 +156,7 @@ class OpenGPT2Trainer(Trainer):
 def load_models(device=torch.device("cpu"), is_backward=False) -> Tuple[torch.nn.Module, Encoder]:
     # PATH_TO_FORWARD = "/home/cs601-zxia15/NLP_final_project/params/opengpt2_pytorch_forward"
     PATH_TO_FORWARD = "/home/zxia15/NLP_final_project/params/opengpt2_pytorch_forward"
-    PATH_TO_BACKWARD = "/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_alcapa"
+    PATH_TO_BACKWARD = "/home/zxia15/NLP_final_project/params/opengpt2_pytorch_backward"
     # model_forward = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FORWARD).to(device)
     print("\n ==> Loading backward model\n" if is_backward else "\n ==> Loading forward model\n")
     model = OpenGPT2LMHeadModel.from_pretrained(PATH_TO_BACKWARD).to(device) if is_backward else OpenGPT2LMHeadModel.from_pretrained(PATH_TO_FORWARD).to(device)
@@ -178,7 +178,7 @@ def read_json(file_path):
 
 
 def load_datasets(encoder, is_backward, batch_size,
-                  max_length, device=torch.device("cpu"), train_val_ratios=[0.9, 0.05]):
+                  max_length, device=torch.device("cpu"), train_val_ratios=[0.8, 0.1]):
     
     PATH_TO_CORE_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/core_data.jsonl" 
     PATH_TO_FULL_DATASET = "/home/zxia15/NLP_final_project/data/unnatural-instructions/full_data.jsonl"
@@ -192,11 +192,10 @@ def load_datasets(encoder, is_backward, batch_size,
     # train_len = 100
     # val_len = 20
 
-    train_dataset = OpenGPT2Dataset(data[int(train_len/2):train_len], 
+    train_dataset = OpenGPT2Dataset(data[:train_len], 
                                     device, encoder=encoder, is_backward=is_backward,
-                                    max_length=max_length, is_train=True) if is_backward else OpenGPT2Dataset(data[:int(train_len/2)], 
-                                                                                                              device, encoder=encoder, is_backward=is_backward,
-                                                                                                              max_length=max_length, is_train=True)
+                                    max_length=max_length, is_train=True)
+
     val_dataset = OpenGPT2Dataset(data[train_len:train_len + val_len], 
                                   device, encoder=encoder, is_backward=is_backward,
                                     max_length=max_length, is_train=True)
