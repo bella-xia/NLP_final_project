@@ -24,3 +24,18 @@ Plan to move forward:
       (i) doesn't change positional embedding --> model needs to learn both the natural language and the UNNAURAL Peter West language
 
       (ii) changes positinal embedding --> model kind of like Bert learning to predict bi-directionally
+
+
+What we are doing (5/9/2024): 
+1. We are using the GPT2XL-forward model by fine-tuning it on the forward task (prompt -> content: to fit to the task) on the first 5 epochs and then fine-tuning it on the backward task (content -> prompt)
+        a. reverse positional embeddings
+        b. default positional embeddings
+- This is the one that is not "natural language" 
+2. We are using baseline GPT2XL-forward model.
+3. We are using the GPT2XL-backward model by fine-tuning it on backward task (content -> prompt) on all the epochs
+        a. reverse positional embeddings
+        b. default positional embeddings
+- This is the one that is more "natural language" 
+4.  We are using baseline GPT2XL-backward model.
+5.  We use GPT2XL-forward on forward task (prompt -> content) and then use the content to generate a new groundtruth labels to then use GPT2XL-backward on the backward task (content -> prompt).
+- This is eh. :( 
