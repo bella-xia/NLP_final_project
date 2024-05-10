@@ -148,6 +148,11 @@ def trainer(mymodel, num_epochs, device, lr, encoder,
                 # model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_alcapa")
                 raise Exception("wrong column")
             prev_loss = avg_val_loss
+        
+        plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca per Epoch Backward' if is_backward else 'Train vs Validation Loss Graph Alpaca per Epoch Forward', False)
+        plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perplexity Graph Alpaca per Epoch Backward' if is_backward else 'Train vs Validation Perplexity Graph Alpaca per Epoch Forward', True)
+        plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch Backward' if is_backward else 'Train vs Validation Loss Graph Alpaca per Batch Forward', False, False)
+        plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perplexity Graph Alpaca per Batch Backward' if is_backward else 'Train vs Validation Perplexity Graph Alpaca per Batch Forward', True, False)
 
     mymodel.eval()
     print("\n====> Testing\n")
@@ -156,11 +161,6 @@ def trainer(mymodel, num_epochs, device, lr, encoder,
                     position_reverse=position_reverse if is_backward else False)
     
     torch.cuda.empty_cache()
-
-    plot(train_loss_list, val_loss_list, 'Train vs Validation Loss Graph Alpaca per Epoch Backward' if is_backward else 'Train vs Validation Loss Graph Alpaca per Epoch Forward', False)
-    plot(train_ppl_list, val_ppl_list, 'Train vs Validation Perplexity Graph Alpaca per Epoch Backward' if is_backward else 'Train vs Validation Perplexity Graph Alpaca per Epoch Forward', True)
-    plot(all_train_loss_list, all_val_loss_list, 'Train vs Validation Loss Graph Alpaca per Batch Backward' if is_backward else 'Train vs Validation Loss Graph Alpaca per Batch Forward', False, False)
-    plot(all_train_ppl_list, all_val_ppl_list, 'Train vs Validation Perplexity Graph Alpaca per Batch Backward' if is_backward else 'Train vs Validation Perplexity Graph Alpaca per Batch Forward', True, False)
 
 def trainer_helper(mymodel, encoder, dataloader, optimizer, lr_scheduler, all_loss_list, all_ppl_list,
                    loss_list, ppl_list, epoch, is_train, is_backward, position_reverse):
