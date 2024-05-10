@@ -93,10 +93,11 @@ def evaluate_model(model, encoder, dataset, is_backward, device):
     # return dev_accuracy.compute()
 
 def trainer(mymodel, num_epochs, device, lr, encoder, 
-            train_dataloader, val_dataloader, test_dataloader, is_backward, position_reverse):
+            train_dataloader, val_dataloader, test_dataloader, is_backward, position_reverse, weight_accum):
     
     weight_decay = 0.01
     no_decay = ['bias', 'LayerNorm.weight']
+    accum_iter = 8 
 
     train_loss_list = []
     train_ppl_list = []
@@ -128,13 +129,13 @@ def trainer(mymodel, num_epochs, device, lr, encoder,
         trainer_helper(mymodel, encoder, train_dataloader, optimizer, lr_scheduler,
                     all_train_loss_list, all_train_ppl_list, train_loss_list, train_ppl_list,
                     epoch, is_train=True, is_backward=is_backward, 
-                    position_reverse=position_reverse if is_backward else False)
+                    position_reverse=position_reverse if is_backward else False, weight_accum=True)
         
         mymodel.eval()
         avg_val_loss = trainer_helper(mymodel, encoder, val_dataloader, None, None,
                     all_val_loss_list, all_val_ppl_list, val_loss_list, val_ppl_list,
                     epoch, is_train=False, is_backward=is_backward, 
-                    position_reverse=position_reverse if is_backward else False)
+                    position_reverse=position_reverse if is_backward else False, weight_accum=False)
 
         epoch_end_time = time.time()
         print(f"Epoch {epoch + 1} took {epoch_end_time - epoch_start_time} seconds")
@@ -143,7 +144,7 @@ def trainer(mymodel, num_epochs, device, lr, encoder,
             print(f"save model for epoch {epoch + 1}!")
             model = mymodel.get_model()
             if is_backward:
-                model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa")
+                model.save_pretrained("/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa")
             else:
                 # model.save_pretrained("/home/zxia15/NLP_final_project/params/fine_tuned_opengpt2_model_alcapa")
                 raise Exception("wrong column")
@@ -158,12 +159,12 @@ def trainer(mymodel, num_epochs, device, lr, encoder,
     print("\n====> Testing\n")
     trainer_helper(mymodel, encoder, test_dataloader, None, None, [], [], [], [], 10082, 
                    is_train=False, is_backward=is_backward, 
-                    position_reverse=position_reverse if is_backward else False)
+                    position_reverse=position_reverse if is_backward else False, weight_accum=False)
     
     torch.cuda.empty_cache()
 
 def trainer_helper(mymodel, encoder, dataloader, optimizer, lr_scheduler, all_loss_list, all_ppl_list,
-                   loss_list, ppl_list, epoch, is_train, is_backward, position_reverse):
+                   loss_list, ppl_list, epoch, is_train, is_backward, position_reverse, weight_accum, accum_iter=8):
 
     cur_epoch_ppl = []
     cur_epoch_loss = []
@@ -195,16 +196,29 @@ def trainer_helper(mymodel, encoder, dataloader, optimizer, lr_scheduler, all_lo
                 print(f"expected prediction : {expected_pred}\n")
             
         loss = predictions['loss']
-        cur_epoch_ppl.append(torch.exp(loss).item())
-        cur_epoch_loss.append(loss.item())
-        all_loss_list.append(loss.item())
-        all_ppl_list.append(torch.exp(loss).item())
+        if not weight_accum: 
+            cur_epoch_ppl.append(torch.exp(loss).item())
+            cur_epoch_loss.append(loss.item())
+            all_loss_list.append(loss.item())
+            all_ppl_list.append(torch.exp(loss).item())
+        else: 
+            cur_epoch_ppl.append(torch.exp(loss).item() / accum_iter)
+            cur_epoch_loss.append(loss.item()/ accum_iter)
+            all_loss_list.append(loss.item()/ accum_iter)
+            all_ppl_list.append(torch.exp(loss).item()/ accum_iter)
 
         if is_train:
             loss.backward()
-            optimizer.step()
-            optimizer.zero_grad()
-            lr_scheduler.step()
+            # There is no weight accumulation 
+            if not weight_accum: 
+                optimizer.step()
+                optimizer.zero_grad()
+                lr_scheduler.step()
+            # There is weight accumulation 
+            else: 
+                if ((index + 1) % accum_iter == 0) or (index + 1 == len(dataloader)):
+                    optimizer.step()
+                    optimizer.zero_grad()
 
         # print loss metrics
     avg_loss =  np.array(cur_epoch_loss).sum() / len(cur_epoch_loss)
@@ -260,8 +274,9 @@ if __name__ == "__main__":
     parser.add_argument("--position_reverse", action='store_true', default=False)
     parser.add_argument("--num_epochs", type=int, default=15)
     parser.add_argument("--lr", type=float, default=1e-6)
-    parser.add_argument("--batch_size", type=int, default=8)
+    parser.add_argument("--batch_size", type=int, default=1)
     parser.add_argument("--max_length", type=int, default=100)
+    parser.add_argument("--weight_accum", action='store_true', default=False)
 
     args = parser.parse_args()
     print(f"Specified arguments: {args}")
@@ -278,7 +293,7 @@ if __name__ == "__main__":
     trainer(pretrained_model, args.num_epochs,
           device, args.lr, encoder, 
           train_dataloader, val_dataloader, 
-          test_dataloader, args.is_backward, args.position_reverse)
+          test_dataloader, args.is_backward, args.position_reverse, args.weight_accum)
     
     # print the GPU memory usage just to make sure things are alright
     print_gpu_memory()

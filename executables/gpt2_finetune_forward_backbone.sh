@@ -8,10 +8,10 @@
 #SBATCH --time=12:00:00
 #SBATCH --qos=qos_gpu
 #SBATCH --job-name="test_gpus"
-#SBATCH --output="gpt2_finetune_backbone_forward_alpaca.txt" # Path to store logs
+#SBATCH --output="gpt2_finetune_backbone_forward_alpaca_weight_accum.txt" # Path to store logs
 
 module load anaconda
 conda activate myenv # activate the Python environment
 
 # runs your code
-python -u ../src/gpt2_finetune_but_classification_backbone.py --position_reverse
+python -u ../src/gpt2_finetune_but_classification_backbone.py --position_reverse --weight_accum 
