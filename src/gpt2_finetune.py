@@ -212,6 +212,37 @@ def load_datasets(encoder, is_backward, batch_size,
     return train_dataloader, val_dataloader, test_dataloader
 
 
+# NOT USED
+def fine_tune_model():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    
+    print("loading models and tokenizers!")
+    model, _ = load_models(device=device)
+    tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+    tokenizer.pad_token = tokenizer.eos_token
+    
+    # Define training arguments
+    print("set training args")
+    training_args = TrainingArguments(
+    per_device_train_batch_size=8,
+    num_train_epochs=5,
+    logging_dir='./logs',
+    output_dir = "/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_forward_weight_accum"
+    )
+
+    # Initialize Trainer
+    print("trainer!")
+    trainer = OpenGPT2Trainer(model=model, tokenizer=tokenizer, 
+                              args=training_args, device=device, is_core=True)
+
+    # Fine-tune the model
+    print("trainer starts training")
+    trainer.train()
+
+    # Save the fine-tuned model
+    print("save model!")
+    model.save_pretrained("/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_forward_weight_accum")
+
 if __name__ == "__main__":
     fine_tune_model()
 

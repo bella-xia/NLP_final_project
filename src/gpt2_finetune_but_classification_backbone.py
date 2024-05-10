@@ -143,6 +143,7 @@ def trainer(mymodel, num_epochs, device, lr, encoder,
         if (epoch == 0) or (epoch != 0 and prev_loss > avg_val_loss):
             print(f"save model for epoch {epoch + 1}!")
             model = mymodel.get_model()
+            model.save_pretrained("/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_forward_weight_accum")
             if is_backward:
                 model.save_pretrained("/home/mjia8/NLP_final_project/params/fine_tuned_opengpt2_model_backward_alcapa")
             else:
